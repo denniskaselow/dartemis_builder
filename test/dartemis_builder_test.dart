@@ -43,6 +43,12 @@ void main() {
 
         expect(result, equals(systemWithMapperResult));
       });
+
+      test('should create systems', () async {
+        var result = await generate(systemWithOtherSystem, generator, buildStep);
+
+        expect(result, equals(systemWithOtherSystemResult));
+      });
     });
   });
 }
@@ -88,6 +94,27 @@ class _$SystemWithMapper extends VoidEntitySystem {
   void initialize() {
     super.initialize();
     someComponentMapper = new Mapper<SomeComponent>(SomeComponent, world);
+  }
+}
+''';
+
+
+const systemWithOtherSystem = r'''
+import 'package:dartemis/dartemis.dart';
+
+class OtherSystem extends VoidEntitySystem {}
+
+@Generate(VoidEntitySystem, systems: const [OtherSystem])
+class SystemWithOtherSystem extends _$SystemWithOtherSystem {}
+''';
+
+const systemWithOtherSystemResult = r'''
+class _$SystemWithOtherSystem extends VoidEntitySystem {
+  OtherSystem otherSystem;
+  @override
+  void initialize() {
+    super.initialize();
+    otherSystem = world.getSystem(OtherSystem);
   }
 }
 ''';

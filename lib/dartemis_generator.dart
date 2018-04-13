@@ -14,13 +14,15 @@ class DartemisGenerator extends GeneratorForAnnotation<Generate> {
     final className = element.name;
     var objectValue = annotation.objectValue;
     final baseClassName = objectValue.getField('base').toTypeValue().name;
-    final components = objectValue
-        .getField('mapper')
-        .toListValue()
-        .map((dartObject) => dartObject.toTypeValue().name);
+    final components =
+        objectValue.getField('mapper').toListValue().map(nameOfDartObject);
+    final systems =
+        objectValue.getField('systems').toListValue().map(nameOfDartObject);
     var mapperDeclarations = '';
+    var systemDeclarations = '';
     var mapperInitializations = '';
-    if (components != null) {
+    var systemInitializations = '';
+    if (components.isNotEmpty) {
       mapperDeclarations = components
           .map((component) =>
               '  Mapper<$component> ${_toMapperName(component)};')
@@ -30,19 +32,38 @@ class DartemisGenerator extends GeneratorForAnnotation<Generate> {
               '    ${_toMapperName(component)} = new Mapper<$component>($component, world);')
           .join('\n');
     }
+    if (systems.isNotEmpty) {
+      systemDeclarations = systems
+          .map((system) => '  $system ${toVariableName(system)};')
+          .join('\n');
+      systemInitializations = systems
+          .map((system) =>
+              '    ${toVariableName(system)} = world.getSystem($system);')
+          .join('\n');
+    }
 
     StringBuffer result =
         new StringBuffer('class _\$$className extends $baseClassName {');
-    if (mapperDeclarations.isNotEmpty) {
+    if (components.isNotEmpty || systems.isNotEmpty) {
       result.writeln('');
-      result.writeln(mapperDeclarations);
+      if (components.isNotEmpty) {
+        result.writeln(mapperDeclarations);
+      }
+      if (systems.isNotEmpty) {
+        result.writeln(systemDeclarations);
+      }
     }
 
-    if (mapperDeclarations.isNotEmpty) {
+    if (components.isNotEmpty || systems.isNotEmpty) {
       result.writeln('  @override');
       result.writeln('  void initialize() {');
       result.writeln('    super.initialize();');
-      result.writeln(mapperInitializations);
+      if (components.isNotEmpty) {
+        result.writeln(mapperInitializations);
+      }
+      if (systems.isNotEmpty) {
+        result.writeln(systemInitializations);
+      }
       result.writeln('  }');
     }
 
@@ -51,8 +72,11 @@ class DartemisGenerator extends GeneratorForAnnotation<Generate> {
     return result.toString();
   }
 
+  String nameOfDartObject(dartObject) => dartObject.toTypeValue().name;
+
   String _toMapperName(String component) =>
-      component.substring(0, 1).toLowerCase() +
-      component.substring(1) +
-      'Mapper';
+      toVariableName(component) + 'Mapper';
+
+  String toVariableName(String component) =>
+      component.substring(0, 1).toLowerCase() + component.substring(1);
 }
