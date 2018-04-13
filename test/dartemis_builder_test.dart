@@ -45,9 +45,16 @@ void main() {
       });
 
       test('should create systems', () async {
-        var result = await generate(systemWithOtherSystem, generator, buildStep);
+        var result =
+            await generate(systemWithOtherSystem, generator, buildStep);
 
         expect(result, equals(systemWithOtherSystemResult));
+      });
+
+      test('should create managers', () async {
+        var result = await generate(systemWithManager, generator, buildStep);
+
+        expect(result, equals(systemWithManagerResult));
       });
     });
   });
@@ -98,7 +105,6 @@ class _$SystemWithMapper extends VoidEntitySystem {
 }
 ''';
 
-
 const systemWithOtherSystem = r'''
 import 'package:dartemis/dartemis.dart';
 
@@ -115,6 +121,26 @@ class _$SystemWithOtherSystem extends VoidEntitySystem {
   void initialize() {
     super.initialize();
     otherSystem = world.getSystem(OtherSystem);
+  }
+}
+''';
+
+const systemWithManager = r'''
+import 'package:dartemis/dartemis.dart';
+
+class SomeManager extends Manager {}
+
+@Generate(VoidEntitySystem, manager: const [SomeManager])
+class SystemWithManager extends _$SystemWithManager {}
+''';
+
+const systemWithManagerResult = r'''
+class _$SystemWithManager extends VoidEntitySystem {
+  SomeManager someManager;
+  @override
+  void initialize() {
+    super.initialize();
+    someManager = world.getManager(SomeManager);
   }
 }
 ''';
