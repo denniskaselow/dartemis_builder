@@ -15,9 +15,15 @@ class DartemisGenerator extends GeneratorForAnnotation<Generate> {
     final className = element.name;
     var objectValue = annotation.objectValue;
     final baseClassName = objectValue.getField('base').toTypeValue().name;
-    final components = _getValues(objectValue, 'mapper');
+    final mapper = _getValues(objectValue, 'mapper');
     final systems = _getValues(objectValue, 'systems');
     final managers = _getValues(objectValue, 'manager');
+    final allOfAspects = _getValues(objectValue, 'allOf');
+    final oneOfAspects = _getValues(objectValue, 'oneOf');
+    final excludedAspects = _getValues(objectValue, 'exclude');
+    final components = new Set.from(mapper)
+      ..addAll(allOfAspects)
+      ..addAll(oneOfAspects);
     var mapperDeclarations = '';
     var systemDeclarations = '';
     var managerDeclarations = '';
@@ -55,7 +61,7 @@ class DartemisGenerator extends GeneratorForAnnotation<Generate> {
 
     StringBuffer result =
         new StringBuffer('class _\$$className extends $baseClassName {');
-    if (components.isNotEmpty || systems.isNotEmpty || managers.isNotEmpty) {
+    if (needsDeclarations(components, systems, managers)) {
       result.writeln('');
       if (components.isNotEmpty) {
         result.writeln(mapperDeclarations);
@@ -66,7 +72,26 @@ class DartemisGenerator extends GeneratorForAnnotation<Generate> {
       if (managers.isNotEmpty) {
         result.writeln(managerDeclarations);
       }
+    }
 
+    if (needsConstructor(allOfAspects, oneOfAspects, excludedAspects)) {
+      if (!needsDeclarations(components, systems, managers)) {
+        result.writeln();
+      }
+      result.write('  _\$$className() : super(new Aspect.empty()');
+      if (allOfAspects.isNotEmpty) {
+        result.write('..allOf([${allOfAspects.join(', ')}])');
+      }
+      if (oneOfAspects.isNotEmpty) {
+        result.write('..oneOf([${oneOfAspects.join(', ')}])');
+      }
+      if (excludedAspects.isNotEmpty) {
+        result.write('..exclude([${excludedAspects.join(', ')}])');
+      }
+      result.writeln(');');
+    }
+
+    if (needsInitializations(components, systems, managers)) {
       result.writeln('  @override');
       result.writeln('  void initialize() {');
       result.writeln('    super.initialize();');
@@ -86,6 +111,20 @@ class DartemisGenerator extends GeneratorForAnnotation<Generate> {
 
     return result.toString();
   }
+
+  bool needsConstructor(Iterable<String> allOfAspects,
+      Iterable<String> oneOfAspects, Iterable<String> excludedAspects) {
+    return allOfAspects.isNotEmpty ||
+        oneOfAspects.isNotEmpty ||
+        excludedAspects.isNotEmpty;
+  }
+
+  bool needsDeclarations(Set components, Iterable<String> systems,
+          Iterable<String> managers) =>
+      components.isNotEmpty || systems.isNotEmpty || managers.isNotEmpty;
+  bool needsInitializations(Set components, Iterable<String> systems,
+          Iterable<String> managers) =>
+      components.isNotEmpty || systems.isNotEmpty || managers.isNotEmpty;
 
   Iterable<String> _getValues(DartObject objectValue, String fieldName) =>
       objectValue.getField(fieldName).toListValue().map(nameOfDartObject);

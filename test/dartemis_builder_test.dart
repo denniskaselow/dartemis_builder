@@ -56,6 +56,27 @@ void main() {
 
         expect(result, equals(systemWithManagerResult));
       });
+
+      test('should create constructor and mappers for allOf aspect', () async {
+        var result =
+            await generate(systemWithAllOfAspect, generator, buildStep);
+
+        expect(result, equals(systemWithAllOfAspectResult));
+      });
+
+      test('should create constructor and mappers for oneOf aspect', () async {
+        var result =
+            await generate(systemWithOneOfAspect, generator, buildStep);
+
+        expect(result, equals(systemWithOneOfAspectResult));
+      });
+
+      test('should create constructor and excluded aspects', () async {
+        var result =
+            await generate(systemWithExcludeAspect, generator, buildStep);
+
+        expect(result, equals(systemWithExcludeAspectResult));
+      });
     });
   });
 }
@@ -142,5 +163,62 @@ class _$SystemWithManager extends VoidEntitySystem {
     super.initialize();
     someManager = world.getManager(SomeManager);
   }
+}
+''';
+
+const systemWithAllOfAspect = r'''
+import 'package:dartemis/dartemis.dart';
+
+class SomeComponent extends Component {}
+
+@Generate(EntityProcessingSystem, allOf: const [SomeComponent])
+class SomeSystem extends _$SomeSystem { {}
+''';
+
+const systemWithAllOfAspectResult = r'''
+class _$SomeSystem extends EntityProcessingSystem {
+  Mapper<SomeComponent> someComponentMapper;
+  _$SomeSystem() : super(new Aspect.empty()..allOf([SomeComponent]));
+  @override
+  void initialize() {
+    super.initialize();
+    someComponentMapper = new Mapper<SomeComponent>(SomeComponent, world);
+  }
+}
+''';
+
+const systemWithOneOfAspect = r'''
+import 'package:dartemis/dartemis.dart';
+
+class SomeComponent extends Component {}
+
+@Generate(EntityProcessingSystem, oneOf: const [SomeComponent])
+class SomeSystem extends _$SomeSystem { {}
+''';
+
+const systemWithOneOfAspectResult = r'''
+class _$SomeSystem extends EntityProcessingSystem {
+  Mapper<SomeComponent> someComponentMapper;
+  _$SomeSystem() : super(new Aspect.empty()..oneOf([SomeComponent]));
+  @override
+  void initialize() {
+    super.initialize();
+    someComponentMapper = new Mapper<SomeComponent>(SomeComponent, world);
+  }
+}
+''';
+
+const systemWithExcludeAspect = r'''
+import 'package:dartemis/dartemis.dart';
+
+class SomeComponent extends Component {}
+
+@Generate(EntityProcessingSystem, exclude: const [SomeComponent])
+class SomeSystem extends _$SomeSystem { {}
+''';
+
+const systemWithExcludeAspectResult = r'''
+class _$SomeSystem extends EntityProcessingSystem {
+  _$SomeSystem() : super(new Aspect.empty()..exclude([SomeComponent]));
 }
 ''';
