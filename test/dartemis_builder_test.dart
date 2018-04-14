@@ -70,6 +70,15 @@ void main() {
       expect(result,
           equals(systemExtendingOtherSystemWithCustomConstructorResult));
     });
+
+    test(
+        'should create constructor with aspect parameter if user wants to pass aspects',
+        () async {
+      var result = await generate(
+          systemWithConstructorAcceptingAspects, generator, buildStep);
+
+      expect(result, equals(systemWithConstructorAcceptingAspectsResult));
+    });
   });
 }
 
@@ -228,5 +237,20 @@ class SomeSystem extends _$SomeSystem {}
 const systemExtendingOtherSystemWithCustomConstructorResult = r'''
 class _$SomeSystem extends SomeOtherSystem {
   _$SomeSystem(String someField) : super(someField);
+}
+''';
+
+const systemWithConstructorAcceptingAspects = r'''
+import 'package:dartemis/dartemis.dart';
+
+@Generate(EntityProcessingSystem)
+class SomeSystem extends _$SomeSystem {
+  SomeSystem(Aspect aspect) : super(aspect);
+}
+''';
+
+const systemWithConstructorAcceptingAspectsResult = r'''
+class _$SomeSystem extends EntityProcessingSystem {
+  _$SomeSystem(Aspect aspect) : super(aspect);
 }
 ''';

@@ -13,6 +13,9 @@ class DartemisGenerator extends GeneratorForAnnotation<Generate> {
   FutureOr<String> generateForAnnotatedElement(covariant ClassElement element,
       ConstantReader annotation, BuildStep buildStep) async {
     final className = element.name;
+    final classConstructor = element.unnamedConstructor;
+    final combineAspects = classConstructor.parameters
+        .any((parameterElement) => parameterElement.type.name == 'Aspect');
     final objectValue = annotation.objectValue;
     final baseClassName = objectValue.getField('base').toTypeValue().name;
     final mapper = _getValues(objectValue, 'mapper');
@@ -25,14 +28,15 @@ class DartemisGenerator extends GeneratorForAnnotation<Generate> {
         (annotation.read('base').typeValue.element as ClassElement)
             .unnamedConstructor;
     final constructorParameter = baseClassConstructor.parameters
-        .where((parameterElement) => parameterElement.type.name != 'Aspect')
+        .where((parameterElement) =>
+            parameterElement.type.name != 'Aspect' || combineAspects)
         .map((parameterElement) =>
             '${parameterElement.type} ${parameterElement.name}')
         .join(', ');
     final superCallParameter = baseClassConstructor.parameters
         .map((parameterElement) => parameterElement.type.name == 'Aspect'
             ? _createAspectParameter(
-                allOfAspects, oneOfAspects, excludedAspects)
+                allOfAspects, oneOfAspects, excludedAspects, combineAspects)
             : '${parameterElement.name}')
         .join(', ');
     final components = new Set.from(mapper)
@@ -42,10 +46,10 @@ class DartemisGenerator extends GeneratorForAnnotation<Generate> {
         .map((component) => '  Mapper<$component> ${_toMapperName(component)};')
         .join('\n');
     final systemDeclarations = systems
-        .map((system) => '  $system ${toVariableName(system)};')
+        .map((system) => '  $system ${_toVariableName(system)};')
         .join('\n');
     final managerDeclarations = managers
-        .map((manager) => '  $manager ${toVariableName(manager)};')
+        .map((manager) => '  $manager ${_toVariableName(manager)};')
         .join('\n');
     final mapperInitializations = components
         .map((component) =>
@@ -53,11 +57,11 @@ class DartemisGenerator extends GeneratorForAnnotation<Generate> {
         .join('\n');
     final systemInitializations = systems
         .map((system) =>
-            '    ${toVariableName(system)} = world.getSystem($system);')
+            '    ${_toVariableName(system)} = world.getSystem($system);')
         .join('\n');
     final managerInitializations = managers
         .map((manager) =>
-            '    ${toVariableName(manager)} = world.getManager($manager);')
+            '    ${_toVariableName(manager)} = world.getManager($manager);')
         .join('\n');
 
     StringBuffer result =
@@ -105,9 +109,13 @@ class DartemisGenerator extends GeneratorForAnnotation<Generate> {
     return result.toString();
   }
 
-  String _createAspectParameter(Iterable<String> allOfAspects,
-      Iterable<String> oneOfAspects, Iterable<String> excludedAspects) {
-    StringBuffer result = new StringBuffer('new Aspect.empty()');
+  String _createAspectParameter(
+      Iterable<String> allOfAspects,
+      Iterable<String> oneOfAspects,
+      Iterable<String> excludedAspects,
+      bool combineAspects) {
+    StringBuffer result =
+        new StringBuffer(combineAspects ? 'aspect' : 'new Aspect.empty()');
     if (allOfAspects.isNotEmpty) {
       result.write('..allOf([${allOfAspects.join(', ')}])');
     }
@@ -128,12 +136,12 @@ class DartemisGenerator extends GeneratorForAnnotation<Generate> {
       components.isNotEmpty || systems.isNotEmpty || managers.isNotEmpty;
 
   Iterable<String> _getValues(DartObject objectValue, String fieldName) =>
-      objectValue.getField(fieldName).toListValue().map(nameOfDartObject);
+      objectValue.getField(fieldName).toListValue().map(_nameOfDartObject);
 
-  String nameOfDartObject(dartObject) => dartObject.toTypeValue().name;
+  String _nameOfDartObject(dartObject) => dartObject.toTypeValue().name;
 
-  String _toMapperName(String typeName) => toVariableName(typeName) + 'Mapper';
+  String _toMapperName(String typeName) => _toVariableName(typeName) + 'Mapper';
 
-  String toVariableName(String typeName) =>
+  String _toVariableName(String typeName) =>
       typeName.substring(0, 1).toLowerCase() + typeName.substring(1);
 }
