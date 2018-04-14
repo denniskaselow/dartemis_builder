@@ -39,9 +39,10 @@ class DartemisGenerator extends GeneratorForAnnotation<Generate> {
                 allOfAspects, oneOfAspects, excludedAspects, combineAspects)
             : '${parameterElement.name}')
         .join(', ');
-    final components = new Set.from(mapper)
+    final components = new Set()
       ..addAll(allOfAspects)
-      ..addAll(oneOfAspects);
+      ..addAll(oneOfAspects)
+      ..addAll(mapper);
     final mapperDeclarations = components
         .map((component) => '  Mapper<$component> ${_toMapperName(component)};')
         .join('\n');

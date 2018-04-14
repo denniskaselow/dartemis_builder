@@ -79,6 +79,12 @@ void main() {
 
       expect(result, equals(systemWithConstructorAcceptingAspectsResult));
     });
+
+    test('should do everything together', () async {
+      var result = await generate(systemWithEverything, generator, buildStep);
+
+      expect(result, equals(systemWithEverythingResult));
+    });
   });
 }
 
@@ -252,5 +258,68 @@ class SomeSystem extends _$SomeSystem {
 const systemWithConstructorAcceptingAspectsResult = r'''
 class _$SomeSystem extends EntityProcessingSystem {
   _$SomeSystem(Aspect aspect) : super(aspect);
+}
+''';
+
+const systemWithEverything = r'''
+import 'package:dartemis/dartemis.dart';
+
+class SomeComponent extends Component {}
+class SomeOtherComponent extends Component {}
+class YetAnotherComponent extends Component {}
+class OneMoreComponent extends Component {}
+class NotThisComponent extends Component {}
+
+@Generate(Manager, mapper: const [SomeComponent])
+class SomeManager extends _$SomeManager {}
+
+@Generate(EntityProcessingSystem, allOf: const [SomeComponent], exclude: const [NotThisComponent])
+class IntermediateSystem extends _$IntermediateSystem {
+  String value;
+  IntermediateSystem(this.value, Aspect aspect) : super(aspect);
+}
+
+@Generate(IntermediateSystem, 
+  allOf: const [SomeOtherComponent], 
+  oneOf: const [YetAnotherComponent],
+  mapper: const [OneMoreComponent],
+  manager: const [SomeManager])
+class FinalSystem extends _$FinalSystem {}
+''';
+
+const systemWithEverythingResult = r'''
+class _$SomeManager extends Manager {
+  Mapper<SomeComponent> someComponentMapper;
+  @override
+  void initialize() {
+    super.initialize();
+    someComponentMapper = new Mapper<SomeComponent>(SomeComponent, world);
+  }
+}
+
+class _$IntermediateSystem extends EntityProcessingSystem {
+  Mapper<SomeComponent> someComponentMapper;
+  _$IntermediateSystem(Aspect aspect) : super(aspect..allOf([SomeComponent])..exclude([NotThisComponent]));
+  @override
+  void initialize() {
+    super.initialize();
+    someComponentMapper = new Mapper<SomeComponent>(SomeComponent, world);
+  }
+}
+
+class _$FinalSystem extends IntermediateSystem {
+  Mapper<SomeOtherComponent> someOtherComponentMapper;
+  Mapper<YetAnotherComponent> yetAnotherComponentMapper;
+  Mapper<OneMoreComponent> oneMoreComponentMapper;
+  SomeManager someManager;
+  _$FinalSystem(String value) : super(value, new Aspect.empty()..allOf([SomeOtherComponent])..oneOf([YetAnotherComponent]));
+  @override
+  void initialize() {
+    super.initialize();
+    someOtherComponentMapper = new Mapper<SomeOtherComponent>(SomeOtherComponent, world);
+    yetAnotherComponentMapper = new Mapper<YetAnotherComponent>(YetAnotherComponent, world);
+    oneMoreComponentMapper = new Mapper<OneMoreComponent>(OneMoreComponent, world);
+    someManager = world.getManager(SomeManager);
+  }
 }
 ''';
