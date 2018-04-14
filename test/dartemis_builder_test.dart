@@ -11,22 +11,10 @@ void main() {
   group('generator', () {
     DartemisGenerator generator;
     BuildStep buildStep;
-    Resolver resolver;
-
-    setUpAll(() async {
-      resolver = new ResolverMock();
-      final assetId = new AssetId.resolve('package:dartemis/dartemis.dart');
-      final dartemisLibrary = resolveAsset(
-          assetId, (resolver) => resolver.findLibraryByName('dartemis'));
-      when(resolver.findLibraryByName('dartemis'))
-          .thenAnswer((_) => dartemisLibrary);
-    });
 
     setUp(() async {
       generator = const DartemisGenerator();
       buildStep = new BuildStepMock();
-
-      when(buildStep.resolver).thenReturn(resolver);
     });
 
     test('should extend base class', () async {
@@ -96,8 +84,6 @@ Future<String> generate(
 }
 
 class BuildStepMock extends Mock implements BuildStep {}
-
-class ResolverMock extends Mock implements Resolver {}
 
 const systemExtendingVoidEntitySystem = r'''
 import 'package:dartemis/dartemis.dart';

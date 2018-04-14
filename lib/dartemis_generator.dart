@@ -38,40 +38,27 @@ class DartemisGenerator extends GeneratorForAnnotation<Generate> {
     final components = new Set.from(mapper)
       ..addAll(allOfAspects)
       ..addAll(oneOfAspects);
-    var mapperDeclarations = '';
-    var systemDeclarations = '';
-    var managerDeclarations = '';
-    var mapperInitializations = '';
-    var systemInitializations = '';
-    var managerInitializations = '';
-    if (components.isNotEmpty) {
-      mapperDeclarations = components
-          .map((component) =>
-              '  Mapper<$component> ${_toMapperName(component)};')
-          .join('\n');
-      mapperInitializations = components
-          .map((component) =>
-              '    ${_toMapperName(component)} = new Mapper<$component>($component, world);')
-          .join('\n');
-    }
-    if (systems.isNotEmpty) {
-      systemDeclarations = systems
-          .map((system) => '  $system ${toVariableName(system)};')
-          .join('\n');
-      systemInitializations = systems
-          .map((system) =>
-              '    ${toVariableName(system)} = world.getSystem($system);')
-          .join('\n');
-    }
-    if (managers.isNotEmpty) {
-      managerDeclarations = managers
-          .map((manager) => '  $manager ${toVariableName(manager)};')
-          .join('\n');
-      managerInitializations = managers
-          .map((manager) =>
-              '    ${toVariableName(manager)} = world.getManager($manager);')
-          .join('\n');
-    }
+    final mapperDeclarations = components
+        .map((component) => '  Mapper<$component> ${_toMapperName(component)};')
+        .join('\n');
+    final systemDeclarations = systems
+        .map((system) => '  $system ${toVariableName(system)};')
+        .join('\n');
+    final managerDeclarations = managers
+        .map((manager) => '  $manager ${toVariableName(manager)};')
+        .join('\n');
+    final mapperInitializations = components
+        .map((component) =>
+            '    ${_toMapperName(component)} = new Mapper<$component>($component, world);')
+        .join('\n');
+    final systemInitializations = systems
+        .map((system) =>
+            '    ${toVariableName(system)} = world.getSystem($system);')
+        .join('\n');
+    final managerInitializations = managers
+        .map((manager) =>
+            '    ${toVariableName(manager)} = world.getManager($manager);')
+        .join('\n');
 
     StringBuffer result =
         new StringBuffer('class _\$$className extends $baseClassName {');
