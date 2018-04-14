@@ -8,10 +8,12 @@ import 'package:mockito/mockito.dart';
 import 'package:build_test/build_test.dart';
 
 void main() {
-  group('', () {
+  group('generator', () {
+    DartemisGenerator generator;
+    BuildStep buildStep;
     Resolver resolver;
 
-    setUp(() async {
+    setUpAll(() async {
       resolver = new ResolverMock();
       final assetId = new AssetId.resolve('package:dartemis/dartemis.dart');
       final dartemisLibrary = resolveAsset(
@@ -20,63 +22,65 @@ void main() {
           .thenAnswer((_) => dartemisLibrary);
     });
 
-    group('generator', () {
-      DartemisGenerator generator;
-      BuildStep buildStep;
+    setUp(() async {
+      generator = const DartemisGenerator();
+      buildStep = new BuildStepMock();
 
-      setUp(() async {
-        generator = const DartemisGenerator();
-        buildStep = new BuildStepMock();
+      when(buildStep.resolver).thenReturn(resolver);
+    });
 
-        when(buildStep.resolver).thenReturn(resolver);
-      });
+    test('should extend base class', () async {
+      var result =
+          await generate(systemExtendingVoidEntitySystem, generator, buildStep);
 
-      test('should extend base class', () async {
-        var result = await generate(
-            systemExtendingVoidEntitySystem, generator, buildStep);
+      expect(result, equals(systemExtendingVoidEntitySystemResult));
+    });
 
-        expect(result, equals(systemExtendingVoidEntitySystemResult));
-      });
+    test('should create mappers', () async {
+      var result = await generate(systemWithMapper, generator, buildStep);
 
-      test('should create mappers', () async {
-        var result = await generate(systemWithMapper, generator, buildStep);
+      expect(result, equals(systemWithMapperResult));
+    });
 
-        expect(result, equals(systemWithMapperResult));
-      });
+    test('should create systems', () async {
+      var result = await generate(systemWithOtherSystem, generator, buildStep);
 
-      test('should create systems', () async {
-        var result =
-            await generate(systemWithOtherSystem, generator, buildStep);
+      expect(result, equals(systemWithOtherSystemResult));
+    });
 
-        expect(result, equals(systemWithOtherSystemResult));
-      });
+    test('should create managers', () async {
+      var result = await generate(systemWithManager, generator, buildStep);
 
-      test('should create managers', () async {
-        var result = await generate(systemWithManager, generator, buildStep);
+      expect(result, equals(systemWithManagerResult));
+    });
 
-        expect(result, equals(systemWithManagerResult));
-      });
+    test('should create constructor and mappers for allOf aspect', () async {
+      var result = await generate(systemWithAllOfAspect, generator, buildStep);
 
-      test('should create constructor and mappers for allOf aspect', () async {
-        var result =
-            await generate(systemWithAllOfAspect, generator, buildStep);
+      expect(result, equals(systemWithAllOfAspectResult));
+    });
 
-        expect(result, equals(systemWithAllOfAspectResult));
-      });
+    test('should create constructor and mappers for oneOf aspect', () async {
+      var result = await generate(systemWithOneOfAspect, generator, buildStep);
 
-      test('should create constructor and mappers for oneOf aspect', () async {
-        var result =
-            await generate(systemWithOneOfAspect, generator, buildStep);
+      expect(result, equals(systemWithOneOfAspectResult));
+    });
 
-        expect(result, equals(systemWithOneOfAspectResult));
-      });
+    test('should create constructor and excluded aspects', () async {
+      var result =
+          await generate(systemWithExcludeAspect, generator, buildStep);
 
-      test('should create constructor and excluded aspects', () async {
-        var result =
-            await generate(systemWithExcludeAspect, generator, buildStep);
+      expect(result, equals(systemWithExcludeAspectResult));
+    });
 
-        expect(result, equals(systemWithExcludeAspectResult));
-      });
+    test('should create constructor with parameters of superclass', () async {
+      var result = await generate(
+          systemExtendingOtherSystemWithCustomConstructor,
+          generator,
+          buildStep);
+
+      expect(result,
+          equals(systemExtendingOtherSystemWithCustomConstructorResult));
     });
   });
 }
@@ -220,5 +224,23 @@ class SomeSystem extends _$SomeSystem { {}
 const systemWithExcludeAspectResult = r'''
 class _$SomeSystem extends EntityProcessingSystem {
   _$SomeSystem() : super(new Aspect.empty()..exclude([SomeComponent]));
+}
+''';
+
+const systemExtendingOtherSystemWithCustomConstructor = r'''
+import 'package:dartemis/dartemis.dart';
+
+class SomeOtherSystem extends VoidEntitySystem {
+  String someField;
+  SomeOtherSystem(this.someField);
+}
+
+@Generate(SomeOtherSystem)
+class SomeSystem extends _$SomeSystem {}
+''';
+
+const systemExtendingOtherSystemWithCustomConstructorResult = r'''
+class _$SomeSystem extends SomeOtherSystem {
+  _$SomeSystem(String someField) : super(someField);
 }
 ''';

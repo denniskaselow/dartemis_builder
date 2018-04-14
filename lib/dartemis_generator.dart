@@ -11,9 +11,9 @@ class DartemisGenerator extends GeneratorForAnnotation<Generate> {
 
   @override
   FutureOr<String> generateForAnnotatedElement(covariant ClassElement element,
-      ConstantReader annotation, BuildStep buildStep) {
+      ConstantReader annotation, BuildStep buildStep) async {
     final className = element.name;
-    var objectValue = annotation.objectValue;
+    final objectValue = annotation.objectValue;
     final baseClassName = objectValue.getField('base').toTypeValue().name;
     final mapper = _getValues(objectValue, 'mapper');
     final systems = _getValues(objectValue, 'systems');
@@ -21,6 +21,20 @@ class DartemisGenerator extends GeneratorForAnnotation<Generate> {
     final allOfAspects = _getValues(objectValue, 'allOf');
     final oneOfAspects = _getValues(objectValue, 'oneOf');
     final excludedAspects = _getValues(objectValue, 'exclude');
+    final baseClassConstructor =
+        (annotation.read('base').typeValue.element as ClassElement)
+            .unnamedConstructor;
+    final constructorParameter = baseClassConstructor.parameters
+        .where((parameterElement) => parameterElement.type.name != 'Aspect')
+        .map((parameterElement) =>
+            '${parameterElement.type} ${parameterElement.name}')
+        .join(', ');
+    final superCallParameter = baseClassConstructor.parameters
+        .map((parameterElement) => parameterElement.type.name == 'Aspect'
+            ? _createAspectParameter(
+                allOfAspects, oneOfAspects, excludedAspects)
+            : '${parameterElement.name}')
+        .join(', ');
     final components = new Set.from(mapper)
       ..addAll(allOfAspects)
       ..addAll(oneOfAspects);
@@ -74,20 +88,12 @@ class DartemisGenerator extends GeneratorForAnnotation<Generate> {
       }
     }
 
-    if (needsConstructor(allOfAspects, oneOfAspects, excludedAspects)) {
+    if (constructorParameter.isNotEmpty || superCallParameter.isNotEmpty) {
       if (!needsDeclarations(components, systems, managers)) {
         result.writeln();
       }
-      result.write('  _\$$className() : super(new Aspect.empty()');
-      if (allOfAspects.isNotEmpty) {
-        result.write('..allOf([${allOfAspects.join(', ')}])');
-      }
-      if (oneOfAspects.isNotEmpty) {
-        result.write('..oneOf([${oneOfAspects.join(', ')}])');
-      }
-      if (excludedAspects.isNotEmpty) {
-        result.write('..exclude([${excludedAspects.join(', ')}])');
-      }
+      result.write(
+          '  _\$$className($constructorParameter) : super($superCallParameter');
       result.writeln(');');
     }
 
@@ -112,11 +118,19 @@ class DartemisGenerator extends GeneratorForAnnotation<Generate> {
     return result.toString();
   }
 
-  bool needsConstructor(Iterable<String> allOfAspects,
+  String _createAspectParameter(Iterable<String> allOfAspects,
       Iterable<String> oneOfAspects, Iterable<String> excludedAspects) {
-    return allOfAspects.isNotEmpty ||
-        oneOfAspects.isNotEmpty ||
-        excludedAspects.isNotEmpty;
+    StringBuffer result = new StringBuffer('new Aspect.empty()');
+    if (allOfAspects.isNotEmpty) {
+      result.write('..allOf([${allOfAspects.join(', ')}])');
+    }
+    if (oneOfAspects.isNotEmpty) {
+      result.write('..oneOf([${oneOfAspects.join(', ')}])');
+    }
+    if (excludedAspects.isNotEmpty) {
+      result.write('..exclude([${excludedAspects.join(', ')}])');
+    }
+    return result.toString();
   }
 
   bool needsDeclarations(Set components, Iterable<String> systems,
