@@ -6,8 +6,8 @@ import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
 import 'package:dartemis/dartemis.dart';
 
-class DartemisGenerator extends GeneratorForAnnotation<Generate> {
-  const DartemisGenerator();
+class SystemGenerator extends GeneratorForAnnotation<Generate> {
+  const SystemGenerator();
 
   @override
   FutureOr<String> generateForAnnotatedElement(covariant ClassElement element,
@@ -65,8 +65,8 @@ class DartemisGenerator extends GeneratorForAnnotation<Generate> {
             '    ${_toVariableName(manager)} = world.getManager($manager);')
         .join('\n');
 
-    StringBuffer result =
-        new StringBuffer('class _\$$className extends $baseClassName {');
+    StringBuffer result = new StringBuffer(
+        'abstract class _\$$className extends $baseClassName {');
     if (needsDeclarations(components, systems, managers)) {
       result.writeln('');
       if (components.isNotEmpty) {

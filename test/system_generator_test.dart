@@ -1,19 +1,19 @@
 import 'dart:async';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:build/build.dart';
-import 'package:dartemis_builder/dartemis_generator.dart';
+import 'package:dartemis_builder/system_generator.dart';
 import 'package:source_gen/source_gen.dart';
 import 'package:test/test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:build_test/build_test.dart';
 
 void main() {
-  group('generator', () {
-    DartemisGenerator generator;
+  group('system generator', () {
+    SystemGenerator generator;
     BuildStep buildStep;
 
     setUp(() async {
-      generator = const DartemisGenerator();
+      generator = const SystemGenerator();
       buildStep = new BuildStepMock();
     });
 
@@ -89,7 +89,7 @@ void main() {
 }
 
 Future<String> generate(
-    String source, DartemisGenerator generator, BuildStep buildStep) async {
+    String source, SystemGenerator generator, BuildStep buildStep) async {
   final libraryElement =
       await resolveSource<LibraryElement>(source, (resolver) {
     return resolver.findLibraryByName('');
@@ -108,7 +108,7 @@ class SimpleSystem extends _$SimpleSystem {}
 ''';
 
 const systemExtendingVoidEntitySystemResult = r'''
-class _$SimpleSystem extends VoidEntitySystem {}
+abstract class _$SimpleSystem extends VoidEntitySystem {}
 ''';
 
 const systemWithMapper = r'''
@@ -121,7 +121,7 @@ class SystemWithMapper extends _$SystemWithMapper {}
 ''';
 
 const systemWithMapperResult = r'''
-class _$SystemWithMapper extends VoidEntitySystem {
+abstract class _$SystemWithMapper extends VoidEntitySystem {
   Mapper<SomeComponent> someComponentMapper;
   @override
   void initialize() {
@@ -141,7 +141,7 @@ class SystemWithOtherSystem extends _$SystemWithOtherSystem {}
 ''';
 
 const systemWithOtherSystemResult = r'''
-class _$SystemWithOtherSystem extends VoidEntitySystem {
+abstract class _$SystemWithOtherSystem extends VoidEntitySystem {
   OtherSystem otherSystem;
   @override
   void initialize() {
@@ -161,7 +161,7 @@ class SystemWithManager extends _$SystemWithManager {}
 ''';
 
 const systemWithManagerResult = r'''
-class _$SystemWithManager extends VoidEntitySystem {
+abstract class _$SystemWithManager extends VoidEntitySystem {
   SomeManager someManager;
   @override
   void initialize() {
@@ -181,7 +181,7 @@ class SomeSystem extends _$SomeSystem { {}
 ''';
 
 const systemWithAllOfAspectResult = r'''
-class _$SomeSystem extends EntityProcessingSystem {
+abstract class _$SomeSystem extends EntityProcessingSystem {
   Mapper<SomeComponent> someComponentMapper;
   _$SomeSystem() : super(new Aspect.empty()..allOf([SomeComponent]));
   @override
@@ -202,7 +202,7 @@ class SomeSystem extends _$SomeSystem { {}
 ''';
 
 const systemWithOneOfAspectResult = r'''
-class _$SomeSystem extends EntityProcessingSystem {
+abstract class _$SomeSystem extends EntityProcessingSystem {
   Mapper<SomeComponent> someComponentMapper;
   _$SomeSystem() : super(new Aspect.empty()..oneOf([SomeComponent]));
   @override
@@ -223,7 +223,7 @@ class SomeSystem extends _$SomeSystem { {}
 ''';
 
 const systemWithExcludeAspectResult = r'''
-class _$SomeSystem extends EntityProcessingSystem {
+abstract class _$SomeSystem extends EntityProcessingSystem {
   _$SomeSystem() : super(new Aspect.empty()..exclude([SomeComponent]));
 }
 ''';
@@ -241,7 +241,7 @@ class SomeSystem extends _$SomeSystem {}
 ''';
 
 const systemExtendingOtherSystemWithCustomConstructorResult = r'''
-class _$SomeSystem extends SomeOtherSystem {
+abstract class _$SomeSystem extends SomeOtherSystem {
   _$SomeSystem(String someField) : super(someField);
 }
 ''';
@@ -256,7 +256,7 @@ class SomeSystem extends _$SomeSystem {
 ''';
 
 const systemWithConstructorAcceptingAspectsResult = r'''
-class _$SomeSystem extends EntityProcessingSystem {
+abstract class _$SomeSystem extends EntityProcessingSystem {
   _$SomeSystem(Aspect aspect) : super(aspect);
 }
 ''';
@@ -288,7 +288,7 @@ class FinalSystem extends _$FinalSystem {}
 ''';
 
 const systemWithEverythingResult = r'''
-class _$SomeManager extends Manager {
+abstract class _$SomeManager extends Manager {
   Mapper<SomeComponent> someComponentMapper;
   @override
   void initialize() {
@@ -297,7 +297,7 @@ class _$SomeManager extends Manager {
   }
 }
 
-class _$IntermediateSystem extends EntityProcessingSystem {
+abstract class _$IntermediateSystem extends EntityProcessingSystem {
   Mapper<SomeComponent> someComponentMapper;
   _$IntermediateSystem(Aspect aspect) : super(aspect..allOf([SomeComponent])..exclude([NotThisComponent]));
   @override
@@ -307,7 +307,7 @@ class _$IntermediateSystem extends EntityProcessingSystem {
   }
 }
 
-class _$FinalSystem extends IntermediateSystem {
+abstract class _$FinalSystem extends IntermediateSystem {
   Mapper<SomeOtherComponent> someOtherComponentMapper;
   Mapper<YetAnotherComponent> yetAnotherComponentMapper;
   Mapper<OneMoreComponent> oneMoreComponentMapper;
