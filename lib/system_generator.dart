@@ -39,7 +39,7 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
                 allOfAspects, oneOfAspects, excludedAspects, combineAspects)
             : '${parameterElement.name}')
         .join(', ');
-    final components = new Set()
+    final components = Set()
       ..addAll(allOfAspects)
       ..addAll(oneOfAspects)
       ..addAll(mapper);
@@ -54,19 +54,19 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
         .join('\n');
     final mapperInitializations = components
         .map((component) =>
-            '    ${_toMapperName(component)} = new Mapper<$component>($component, world);')
+            '    ${_toMapperName(component)} = Mapper<$component>(world);')
         .join('\n');
     final systemInitializations = systems
         .map((system) =>
-            '    ${_toVariableName(system)} = world.getSystem($system);')
+            '    ${_toVariableName(system)} = world.getSystem<$system>();')
         .join('\n');
     final managerInitializations = managers
         .map((manager) =>
-            '    ${_toVariableName(manager)} = world.getManager($manager);')
+            '    ${_toVariableName(manager)} = world.getManager<$manager>();')
         .join('\n');
 
-    StringBuffer result = new StringBuffer(
-        'abstract class _\$$className extends $baseClassName {');
+    StringBuffer result =
+        StringBuffer('abstract class _\$$className extends $baseClassName {');
     if (needsDeclarations(components, systems, managers)) {
       result.writeln('');
       if (components.isNotEmpty) {
@@ -116,7 +116,7 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
       Iterable<String> excludedAspects,
       bool combineAspects) {
     StringBuffer result =
-        new StringBuffer(combineAspects ? 'aspect' : 'new Aspect.empty()');
+        StringBuffer(combineAspects ? 'aspect' : 'Aspect.empty()');
     if (allOfAspects.isNotEmpty) {
       result.write('..allOf([${allOfAspects.join(', ')}])');
     }
