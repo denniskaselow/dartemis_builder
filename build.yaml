@@ -5,6 +5,6 @@ builders:
       - systemBuilder
     build_extensions:
       .dart:
-        - ".g.dart"
+        - "dartemis_builder.g.dart"
     build_to: source
     auto_apply: root_package
