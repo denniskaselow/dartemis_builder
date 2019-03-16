@@ -17,7 +17,10 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
     final combineAspects = classConstructor.parameters
         .any((parameterElement) => parameterElement.type.name == 'Aspect');
     final objectValue = annotation.objectValue;
-    final baseClassName = objectValue.getField('base').toTypeValue().name;
+    final baseClassType = objectValue.getField('base').toTypeValue();
+    final baseClassName = baseClassType.name;
+    final baseClassTypeParameters =
+        (baseClassType.element as ClassElement).typeParameters;
     final mapper = _getValues(objectValue, 'mapper');
     final systems = _getValues(objectValue, 'systems');
     final managers = _getValues(objectValue, 'manager');
@@ -65,8 +68,10 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
             '    ${_toVariableName(manager)} = world.getManager<$manager>();')
         .join('\n');
 
-    StringBuffer result =
-        StringBuffer('abstract class _\$$className extends $baseClassName {');
+    StringBuffer result = baseClassTypeParameters.isEmpty
+        ? StringBuffer('abstract class _\$$className extends $baseClassName {')
+        : StringBuffer(
+            'abstract class _\$$className<${_baseClassBoundedTypeParameters(baseClassTypeParameters)}> extends $baseClassName<${_baseClassUnboundedTypeParameters(baseClassTypeParameters)}> {');
     if (needsDeclarations(components, systems, managers)) {
       result.writeln('');
       if (components.isNotEmpty) {
@@ -109,6 +114,16 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
 
     return result.toString();
   }
+
+  String _baseClassBoundedTypeParameters(
+          List<TypeParameterElement> baseClassTypeParameters) =>
+      baseClassTypeParameters
+          .map((param) => '${param.name} extends ${param.bound}')
+          .join(', ');
+
+  String _baseClassUnboundedTypeParameters(
+          List<TypeParameterElement> baseClassTypeParameters) =>
+      baseClassTypeParameters.map((param) => param.name).join(', ');
 
   String _createAspectParameter(
       Iterable<String> allOfAspects,

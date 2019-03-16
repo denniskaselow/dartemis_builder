@@ -24,6 +24,13 @@ void main() {
       expect(result, equals(systemExtendingVoidEntitySystemResult));
     });
 
+    test('should handle generics', () async {
+      var result = await generate(
+          systemExtendingEntitySystemWithGenerics, generator, buildStep);
+
+      expect(result, equals(systemExtendingEntitySystemWithGenericsResult));
+    });
+
     test('should create mappers', () async {
       var result = await generate(systemWithMapper, generator, buildStep);
 
@@ -303,3 +310,14 @@ abstract class _$FinalSystem extends IntermediateSystem {
     someManager = world.getManager<SomeManager>();
   }
 }''';
+
+const systemExtendingEntitySystemWithGenerics = r'''
+import 'package:dartemis/dartemis.dart';
+
+abstract class SomeTypedSystem<T extends Object, S extends num> extends VoidEntitySystem {}
+
+@Generate(SomeTypedSystem)
+class SimpleSystem extends _$SimpleSystem<String, int> {}''';
+
+const systemExtendingEntitySystemWithGenericsResult = r'''
+abstract class _$SimpleSystem<T extends Object, S extends num> extends SomeTypedSystem<T, S> {}''';
