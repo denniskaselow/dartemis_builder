@@ -4,16 +4,7 @@ A builder for dartemis to create the code necessary to initialize `Manager`s, `M
 
 ## Usage
 
-Add a dependency to the builder and include it in your `build.yaml`.
-
-```yaml
-targets:
-  $default:
-    builders:
-      dartemis_builder|systemBuilder
-```
-
-Then add the `@Generate` annotation on a `Manager` or `EntitySystem` and run `build_runner`.
+Add the `@Generate` annotation on a `Manager` or `EntitySystem` and run `build_runner`.
 
 ```dart
 @Generate(EntityProcessingSystem, allOf: [Velocity, Position])
