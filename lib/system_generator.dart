@@ -15,10 +15,10 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
     final className = element.name;
     final classConstructor = element.unnamedConstructor;
     final combineAspects = classConstructor.parameters
-        .any((parameterElement) => parameterElement.type.name == 'Aspect');
+        .any((parameterElement) => parameterElement.type.element.name == 'Aspect');
     final objectValue = annotation.objectValue;
     final baseClassType = objectValue.getField('base').toTypeValue();
-    final baseClassName = baseClassType.name;
+    final baseClassName = baseClassType.element.name;
     final baseClassTypeParameters =
         (baseClassType.element as ClassElement).typeParameters;
     final mapper = _getValues(objectValue, 'mapper');
@@ -32,12 +32,12 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
             .unnamedConstructor;
     final constructorParameter = baseClassConstructor.parameters
         .where((parameterElement) =>
-            parameterElement.type.name != 'Aspect' || combineAspects)
+            parameterElement.type.element.name != 'Aspect' || combineAspects)
         .map((parameterElement) =>
             '${parameterElement.type} ${parameterElement.name}')
         .join(', ');
     final superCallParameter = baseClassConstructor.parameters
-        .map((parameterElement) => parameterElement.type.name == 'Aspect'
+        .map((parameterElement) => parameterElement.type.element.name == 'Aspect'
             ? _createAspectParameter(
                 allOfAspects, oneOfAspects, excludedAspects, combineAspects)
             : '${parameterElement.name}')
