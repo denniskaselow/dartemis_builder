@@ -14,8 +14,8 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
       ConstantReader annotation, BuildStep buildStep) async {
     final className = element.name;
     final classConstructor = element.unnamedConstructor;
-    final combineAspects = classConstructor.parameters
-        .any((parameterElement) => parameterElement.type.element.name == 'Aspect');
+    final combineAspects = classConstructor.parameters.any(
+        (parameterElement) => parameterElement.type.element.name == 'Aspect');
     final objectValue = annotation.objectValue;
     final baseClassType = objectValue.getField('base').toTypeValue();
     final baseClassName = baseClassType.element.name;
@@ -37,10 +37,11 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
             '${parameterElement.type} ${parameterElement.name}')
         .join(', ');
     final superCallParameter = baseClassConstructor.parameters
-        .map((parameterElement) => parameterElement.type.element.name == 'Aspect'
-            ? _createAspectParameter(
-                allOfAspects, oneOfAspects, excludedAspects, combineAspects)
-            : '${parameterElement.name}')
+        .map((parameterElement) =>
+            parameterElement.type.element.name == 'Aspect'
+                ? _createAspectParameter(
+                    allOfAspects, oneOfAspects, excludedAspects, combineAspects)
+                : '${parameterElement.name}')
         .join(', ');
     final components = Set()
       ..addAll(allOfAspects)
