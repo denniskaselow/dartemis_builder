@@ -1,6 +1,6 @@
 name: dartemis_builder
-description: A builder to generate code that initializes EntitySystems and Managers.
-version: 0.0.1-dev
+description: A builder for use with dartemis to generate code that initializes EntitySystems and Managers.
+version: 0.1.0-dev
 homepage: https://github.com/denniskaselow/dartemis_builder
 author: Dennis Kaselow <Dennis.Kaselow+dartemis@gmail.com>
 
@@ -17,6 +17,6 @@ dependencies:
       ref: entityToInt
 
 dev_dependencies:
-  build_test: ^0.10.2
+  build_test: ^1.0.0
   test: ^1.2.0
   mockito: ^4.0.0
