@@ -52,21 +52,21 @@ void main() {
 
     test('should create constructor and mappers for allOf aspect', () async {
       final result =
-      await generate(systemWithAllOfAspect, generator, buildStep);
+          await generate(systemWithAllOfAspect, generator, buildStep);
 
       expect(result, equals(systemWithAllOfAspectResult));
     });
 
     test('should create constructor and mappers for oneOf aspect', () async {
       final result =
-      await generate(systemWithOneOfAspect, generator, buildStep);
+          await generate(systemWithOneOfAspect, generator, buildStep);
 
       expect(result, equals(systemWithOneOfAspectResult));
     });
 
     test('should create constructor and excluded aspects', () async {
       final result =
-      await generate(systemWithExcludeAspect, generator, buildStep);
+          await generate(systemWithExcludeAspect, generator, buildStep);
 
       expect(result, equals(systemWithExcludeAspectResult));
     });
@@ -83,12 +83,12 @@ void main() {
 
     test(
         '''should create constructor with aspect parameter if user wants to pass aspects''',
-            () async {
-          final result = await generate(
-              systemWithConstructorAcceptingAspects, generator, buildStep);
+        () async {
+      final result = await generate(
+          systemWithConstructorAcceptingAspects, generator, buildStep);
 
-          expect(result, equals(systemWithConstructorAcceptingAspectsResult));
-        });
+      expect(result, equals(systemWithConstructorAcceptingAspectsResult));
+    });
 
     test('should do everything together', () async {
       final result = await generate(systemWithEverything, generator, buildStep);

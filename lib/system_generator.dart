@@ -94,8 +94,10 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
     }
 
     if (needsInitializations(components, systems, managers)) {
-      result..writeln('  @override')..writeln('  void initialize() {')..writeln(
-          '    super.initialize();');
+      result
+        ..writeln('  @override')
+        ..writeln('  void initialize() {')
+        ..writeln('    super.initialize();');
       if (components.isNotEmpty) {
         result.writeln(mapperInitializations);
       }
@@ -142,21 +144,18 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
   }
 
   bool needsDeclarations(Set components, Iterable<String> systems,
-      Iterable<String> managers) =>
+          Iterable<String> managers) =>
       components.isNotEmpty || systems.isNotEmpty || managers.isNotEmpty;
 
   bool needsInitializations(Set components, Iterable<String> systems,
-      Iterable<String> managers) =>
+          Iterable<String> managers) =>
       components.isNotEmpty || systems.isNotEmpty || managers.isNotEmpty;
 
   Iterable<String> _getValues(DartObject objectValue, String fieldName) =>
       objectValue.getField(fieldName).toListValue().map(_nameOfDartObject);
 
   String _nameOfDartObject(DartObject dartObject) =>
-      dartObject
-          .toTypeValue()
-          .element
-          .name;
+      dartObject.toTypeValue().element.name;
 
   String _toMapperName(String typeName) => '${_toVariableName(typeName)}Mapper';
 
