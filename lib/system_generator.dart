@@ -41,12 +41,9 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
             parameterElement.type.element.name == 'Aspect'
                 ? _createAspectParameter(
                     allOfAspects, oneOfAspects, excludedAspects, combineAspects)
-                : '${parameterElement.name}')
+                : parameterElement.name)
         .join(', ');
-    final components = Set()
-      ..addAll(allOfAspects)
-      ..addAll(oneOfAspects)
-      ..addAll(mapper);
+    final components = {...allOfAspects, ...oneOfAspects, ...mapper};
     final mapperDeclarations = components
         .map((component) => '  Mapper<$component> ${_toMapperName(component)};')
         .join('\n');
@@ -62,17 +59,19 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
         .join('\n');
     final systemInitializations = systems
         .map((system) =>
-            '    ${_toVariableName(system)} = world.getSystem<$system>();')
+    '    ${_toVariableName(system)} = world.getSystem<$system>();')
         .join('\n');
     final managerInitializations = managers
         .map((manager) =>
-            '    ${_toVariableName(manager)} = world.getManager<$manager>();')
+    '    ${_toVariableName(manager)} = world.getManager<$manager>();')
         .join('\n');
 
-    StringBuffer result = baseClassTypeParameters.isEmpty
+    final result = baseClassTypeParameters.isEmpty
         ? StringBuffer('abstract class _\$$className extends $baseClassName {')
         : StringBuffer(
-            'abstract class _\$$className<${_baseClassBoundedTypeParameters(baseClassTypeParameters)}> extends $baseClassName<${_baseClassUnboundedTypeParameters(baseClassTypeParameters)}> {');
+        '''abstract class _\$$className<${_baseClassBoundedTypeParameters(
+            baseClassTypeParameters)}> extends $baseClassName<${_baseClassUnboundedTypeParameters(
+            baseClassTypeParameters)}> {''');
     if (needsDeclarations(components, systems, managers)) {
       result.writeln('');
       if (components.isNotEmpty) {
@@ -90,15 +89,15 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
       if (!needsDeclarations(components, systems, managers)) {
         result.writeln();
       }
-      result.write(
-          '  _\$$className($constructorParameter) : super($superCallParameter');
-      result.writeln(');');
+      result
+        ..write(
+            '''  _\$$className($constructorParameter) : super($superCallParameter''')
+        ..writeln(');');
     }
 
     if (needsInitializations(components, systems, managers)) {
-      result.writeln('  @override');
-      result.writeln('  void initialize() {');
-      result.writeln('    super.initialize();');
+      result..writeln('  @override')..writeln('  void initialize() {')..writeln(
+          '    super.initialize();');
       if (components.isNotEmpty) {
         result.writeln(mapperInitializations);
       }
@@ -131,8 +130,7 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
       Iterable<String> oneOfAspects,
       Iterable<String> excludedAspects,
       bool combineAspects) {
-    StringBuffer result =
-        StringBuffer(combineAspects ? 'aspect' : 'Aspect.empty()');
+    final result = StringBuffer(combineAspects ? 'aspect' : 'Aspect.empty()');
     if (allOfAspects.isNotEmpty) {
       result.write('..allOf([${allOfAspects.join(', ')}])');
     }
@@ -146,18 +144,23 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
   }
 
   bool needsDeclarations(Set components, Iterable<String> systems,
-          Iterable<String> managers) =>
+      Iterable<String> managers) =>
       components.isNotEmpty || systems.isNotEmpty || managers.isNotEmpty;
+
   bool needsInitializations(Set components, Iterable<String> systems,
-          Iterable<String> managers) =>
+      Iterable<String> managers) =>
       components.isNotEmpty || systems.isNotEmpty || managers.isNotEmpty;
 
   Iterable<String> _getValues(DartObject objectValue, String fieldName) =>
       objectValue.getField(fieldName).toListValue().map(_nameOfDartObject);
 
-  String _nameOfDartObject(dartObject) => dartObject.toTypeValue().name;
+  String _nameOfDartObject(DartObject dartObject) =>
+      dartObject
+          .toTypeValue()
+          .element
+          .name;
 
-  String _toMapperName(String typeName) => _toVariableName(typeName) + 'Mapper';
+  String _toMapperName(String typeName) => '${_toVariableName(typeName)}Mapper';
 
   String _toVariableName(String typeName) =>
       typeName.substring(0, 1).toLowerCase() + typeName.substring(1);

@@ -18,58 +18,61 @@ void main() {
     });
 
     test('should extend base class', () async {
-      var result =
+      final result =
           await generate(systemExtendingVoidEntitySystem, generator, buildStep);
 
       expect(result, equals(systemExtendingVoidEntitySystemResult));
     });
 
     test('should handle generics', () async {
-      var result = await generate(
+      final result = await generate(
           systemExtendingEntitySystemWithGenerics, generator, buildStep);
 
       expect(result, equals(systemExtendingEntitySystemWithGenericsResult));
     });
 
     test('should create mappers', () async {
-      var result = await generate(systemWithMapper, generator, buildStep);
+      final result = await generate(systemWithMapper, generator, buildStep);
 
       expect(result, equals(systemWithMapperResult));
     });
 
     test('should create systems', () async {
-      var result = await generate(systemWithOtherSystem, generator, buildStep);
+      final result =
+      await generate(systemWithOtherSystem, generator, buildStep);
 
       expect(result, equals(systemWithOtherSystemResult));
     });
 
     test('should create managers', () async {
-      var result = await generate(systemWithManager, generator, buildStep);
+      final result = await generate(systemWithManager, generator, buildStep);
 
       expect(result, equals(systemWithManagerResult));
     });
 
     test('should create constructor and mappers for allOf aspect', () async {
-      var result = await generate(systemWithAllOfAspect, generator, buildStep);
+      final result =
+      await generate(systemWithAllOfAspect, generator, buildStep);
 
       expect(result, equals(systemWithAllOfAspectResult));
     });
 
     test('should create constructor and mappers for oneOf aspect', () async {
-      var result = await generate(systemWithOneOfAspect, generator, buildStep);
+      final result =
+      await generate(systemWithOneOfAspect, generator, buildStep);
 
       expect(result, equals(systemWithOneOfAspectResult));
     });
 
     test('should create constructor and excluded aspects', () async {
-      var result =
-          await generate(systemWithExcludeAspect, generator, buildStep);
+      final result =
+      await generate(systemWithExcludeAspect, generator, buildStep);
 
       expect(result, equals(systemWithExcludeAspectResult));
     });
 
     test('should create constructor with parameters of superclass', () async {
-      var result = await generate(
+      final result = await generate(
           systemExtendingOtherSystemWithCustomConstructor,
           generator,
           buildStep);
@@ -79,16 +82,16 @@ void main() {
     });
 
     test(
-        'should create constructor with aspect parameter if user wants to pass aspects',
-        () async {
-      var result = await generate(
-          systemWithConstructorAcceptingAspects, generator, buildStep);
+        '''should create constructor with aspect parameter if user wants to pass aspects''',
+            () async {
+          final result = await generate(
+              systemWithConstructorAcceptingAspects, generator, buildStep);
 
-      expect(result, equals(systemWithConstructorAcceptingAspectsResult));
-    });
+          expect(result, equals(systemWithConstructorAcceptingAspectsResult));
+        });
 
     test('should do everything together', () async {
-      var result = await generate(systemWithEverything, generator, buildStep);
+      final result = await generate(systemWithEverything, generator, buildStep);
 
       expect(result, equals(systemWithEverythingResult));
     });
@@ -97,10 +100,8 @@ void main() {
 
 Future<String> generate(
     String source, SystemGenerator generator, BuildStep buildStep) async {
-  final libraryElement =
-      await resolveSource<LibraryElement>(source, (resolver) {
-    return resolver.findLibraryByName('');
-  });
+  final libraryElement = await resolveSource<LibraryElement>(
+      source, (resolver) => resolver.findLibraryByName(''));
 
   return await generator.generate(LibraryReader(libraryElement), buildStep);
 }
