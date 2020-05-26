@@ -39,7 +39,7 @@ void main() {
 
     test('should create systems', () async {
       final result =
-      await generate(systemWithOtherSystem, generator, buildStep);
+          await generate(systemWithOtherSystem, generator, buildStep);
 
       expect(result, equals(systemWithOtherSystemResult));
     });

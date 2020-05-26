@@ -59,19 +59,17 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
         .join('\n');
     final systemInitializations = systems
         .map((system) =>
-    '    ${_toVariableName(system)} = world.getSystem<$system>();')
+            '    ${_toVariableName(system)} = world.getSystem<$system>();')
         .join('\n');
     final managerInitializations = managers
         .map((manager) =>
-    '    ${_toVariableName(manager)} = world.getManager<$manager>();')
+            '    ${_toVariableName(manager)} = world.getManager<$manager>();')
         .join('\n');
 
     final result = baseClassTypeParameters.isEmpty
         ? StringBuffer('abstract class _\$$className extends $baseClassName {')
         : StringBuffer(
-        '''abstract class _\$$className<${_baseClassBoundedTypeParameters(
-            baseClassTypeParameters)}> extends $baseClassName<${_baseClassUnboundedTypeParameters(
-            baseClassTypeParameters)}> {''');
+            '''abstract class _\$$className<${_baseClassBoundedTypeParameters(baseClassTypeParameters)}> extends $baseClassName<${_baseClassUnboundedTypeParameters(baseClassTypeParameters)}> {''');
     if (needsDeclarations(components, systems, managers)) {
       result.writeln('');
       if (components.isNotEmpty) {
