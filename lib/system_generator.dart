@@ -34,7 +34,7 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
         .where((parameterElement) =>
             parameterElement.type.element.name != 'Aspect' || combineAspects)
         .map((parameterElement) =>
-            '${parameterElement.type} ${parameterElement.name}')
+            '${parameterElement.type.element.name} ${parameterElement.name}')
         .join(', ');
     final superCallParameter = baseClassConstructor.parameters
         .map((parameterElement) =>
