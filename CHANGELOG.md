@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1
+### Bugfix
+- correct handling of managers/systems with type parameter
+
 ## 0.1.0+2
 - updated upper bound of analyzer dependency
 

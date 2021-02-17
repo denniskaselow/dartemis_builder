@@ -34,7 +34,7 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
         .where((parameterElement) =>
             parameterElement.type.element.name != 'Aspect' || combineAspects)
         .map((parameterElement) =>
-            '${parameterElement.type.element.name} ${parameterElement.name}')
+            '''${parameterElement.type.getDisplayString(withNullability: false)} ${parameterElement.name}''')
         .join(', ');
     final superCallParameter = baseClassConstructor.parameters
         .map((parameterElement) =>
@@ -118,7 +118,7 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
   String _baseClassBoundedTypeParameters(
           List<TypeParameterElement> baseClassTypeParameters) =>
       baseClassTypeParameters
-          .map((param) => '${param.name} extends ${param.bound}')
+          .map((param) => '${param.name} extends ${param.bound.element.name}')
           .join(', ');
 
   String _baseClassUnboundedTypeParameters(
