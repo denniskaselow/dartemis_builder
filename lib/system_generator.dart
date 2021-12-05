@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:build/build.dart';
-import 'package:source_gen/source_gen.dart';
 import 'package:dartemis/dartemis.dart';
+import 'package:source_gen/source_gen.dart';
 
 class SystemGenerator extends GeneratorForAnnotation<Generate> {
   const SystemGenerator();
@@ -13,12 +13,13 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
   FutureOr<String> generateForAnnotatedElement(covariant ClassElement element,
       ConstantReader annotation, BuildStep buildStep) async {
     final className = element.name;
-    final classConstructor = element.unnamedConstructor;
-    final combineAspects = classConstructor.parameters.any(
-        (parameterElement) => parameterElement.type.element.name == 'Aspect');
+    final classConstructor = element.unnamedConstructor!;
+    final combineAspects = classConstructor.parameters.any((parameterElement) =>
+        parameterElement.type.getDisplayString(withNullability: false) ==
+        'Aspect');
     final objectValue = annotation.objectValue;
-    final baseClassType = objectValue.getField('base').toTypeValue();
-    final baseClassName = baseClassType.element.name;
+    final baseClassType = objectValue.getField('base')!.toTypeValue()!;
+    final baseClassName = baseClassType.element!.name;
     final baseClassTypeParameters =
         (baseClassType.element as ClassElement).typeParameters;
     final mapper = _getValues(objectValue, 'mapper');
@@ -29,33 +30,46 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
     final excludedAspects = _getValues(objectValue, 'exclude');
     final baseClassConstructor =
         (annotation.read('base').typeValue.element as ClassElement)
-            .unnamedConstructor;
+            .unnamedConstructor!;
     final constructorParameter = baseClassConstructor.parameters
         .where((parameterElement) =>
-            parameterElement.type.element.name != 'Aspect' || combineAspects)
+            parameterElement.type.getDisplayString(withNullability: false) !=
+                'Aspect' ||
+            combineAspects)
         .map((parameterElement) =>
             '''${parameterElement.type.getDisplayString(withNullability: false)} ${parameterElement.name}''')
         .join(', ');
     final superCallParameter = baseClassConstructor.parameters
         .map((parameterElement) =>
-            parameterElement.type.element.name == 'Aspect'
+            parameterElement.type.getDisplayString(withNullability: false) ==
+                    'Aspect'
                 ? _createAspectParameter(
                     allOfAspects, oneOfAspects, excludedAspects, combineAspects)
                 : parameterElement.name)
         .join(', ');
-    final components = {...allOfAspects, ...oneOfAspects, ...mapper};
+    final components = {...allOfAspects, ...mapper};
+    final optionalComponents = {...oneOfAspects};
     final mapperDeclarations = components
-        .map((component) => '  Mapper<$component> ${_toMapperName(component)};')
+        .map((component) =>
+            '  late final Mapper<$component> ${_toMapperName(component)};')
+        .join('\n');
+    final optionalMapperDeclarations = optionalComponents
+        .map((component) =>
+            '''  late final OptionalMapper<$component> ${_toMapperName(component)};''')
         .join('\n');
     final systemDeclarations = systems
-        .map((system) => '  $system ${_toVariableName(system)};')
+        .map((system) => '  late final $system ${_toVariableName(system)};')
         .join('\n');
     final managerDeclarations = managers
-        .map((manager) => '  $manager ${_toVariableName(manager)};')
+        .map((manager) => '  late final $manager ${_toVariableName(manager)};')
         .join('\n');
     final mapperInitializations = components
         .map((component) =>
             '    ${_toMapperName(component)} = Mapper<$component>(world);')
+        .join('\n');
+    final optionalMapperInitializations = optionalComponents
+        .map((component) =>
+            '''    ${_toMapperName(component)} = OptionalMapper<$component>(world);''')
         .join('\n');
     final systemInitializations = systems
         .map((system) =>
@@ -65,15 +79,19 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
         .map((manager) =>
             '    ${_toVariableName(manager)} = world.getManager<$manager>();')
         .join('\n');
-
     final result = baseClassTypeParameters.isEmpty
         ? StringBuffer('abstract class _\$$className extends $baseClassName {')
         : StringBuffer(
             '''abstract class _\$$className<${_baseClassBoundedTypeParameters(baseClassTypeParameters)}> extends $baseClassName<${_baseClassUnboundedTypeParameters(baseClassTypeParameters)}> {''');
-    if (needsDeclarations(components, systems, managers)) {
-      result.writeln('');
+    final hasFields =
+        declaresFields(components, optionalComponents, systems, managers);
+    if (hasFields) {
+      result.writeln();
       if (components.isNotEmpty) {
         result.writeln(mapperDeclarations);
+      }
+      if (optionalComponents.isNotEmpty) {
+        result.writeln(optionalMapperDeclarations);
       }
       if (systems.isNotEmpty) {
         result.writeln(systemDeclarations);
@@ -84,7 +102,7 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
     }
 
     if (constructorParameter.isNotEmpty || superCallParameter.isNotEmpty) {
-      if (!needsDeclarations(components, systems, managers)) {
+      if (!hasFields) {
         result.writeln();
       }
       result
@@ -93,13 +111,16 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
         ..writeln(');');
     }
 
-    if (needsInitializations(components, systems, managers)) {
+    if (hasFields) {
       result
         ..writeln('  @override')
         ..writeln('  void initialize() {')
         ..writeln('    super.initialize();');
       if (components.isNotEmpty) {
         result.writeln(mapperInitializations);
+      }
+      if (optionalComponents.isNotEmpty) {
+        result.writeln(optionalMapperInitializations);
       }
       if (systems.isNotEmpty) {
         result.writeln(systemInitializations);
@@ -118,7 +139,8 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
   String _baseClassBoundedTypeParameters(
           List<TypeParameterElement> baseClassTypeParameters) =>
       baseClassTypeParameters
-          .map((param) => '${param.name} extends ${param.bound.element.name}')
+          .map((param) =>
+              '''${param.name} extends ${param.bound!.getDisplayString(withNullability: false)}''')
           .join(', ');
 
   String _baseClassUnboundedTypeParameters(
@@ -143,19 +165,18 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
     return result.toString();
   }
 
-  bool needsDeclarations(Set components, Iterable<String> systems,
-          Iterable<String> managers) =>
-      components.isNotEmpty || systems.isNotEmpty || managers.isNotEmpty;
-
-  bool needsInitializations(Set components, Iterable<String> systems,
-          Iterable<String> managers) =>
-      components.isNotEmpty || systems.isNotEmpty || managers.isNotEmpty;
+  bool declaresFields(Set components, Set optionalComponents,
+          Iterable<String> systems, Iterable<String> managers) =>
+      components.isNotEmpty ||
+      optionalComponents.isNotEmpty ||
+      systems.isNotEmpty ||
+      managers.isNotEmpty;
 
   Iterable<String> _getValues(DartObject objectValue, String fieldName) =>
-      objectValue.getField(fieldName).toListValue().map(_nameOfDartObject);
+      objectValue.getField(fieldName)!.toListValue()!.map(_nameOfDartObject);
 
   String _nameOfDartObject(DartObject dartObject) =>
-      dartObject.toTypeValue().element.name;
+      dartObject.toTypeValue()!.getDisplayString(withNullability: false);
 
   String _toMapperName(String typeName) => '${_toVariableName(typeName)}Mapper';
 

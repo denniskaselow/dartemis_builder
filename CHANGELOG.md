@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.0
+
+- supports NNBD
+- creates OptionalMapper for oneOf-Mappers 
+
 ## 0.1.1
 ### Minor Changes
 - updated upper bound of analyzer dependency
