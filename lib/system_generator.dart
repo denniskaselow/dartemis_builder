@@ -19,9 +19,9 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
         'Aspect');
     final objectValue = annotation.objectValue;
     final baseClassType = objectValue.getField('base')!.toTypeValue()!;
-    final baseClassName = baseClassType.element!.name;
+    final baseClassName = baseClassType.element2!.name;
     final baseClassTypeParameters =
-        (baseClassType.element as ClassElement).typeParameters;
+        (baseClassType.element2 as ClassElement).typeParameters;
     final mapper = _getValues(objectValue, 'mapper');
     final systems = _getValues(objectValue, 'systems');
     final managers = _getValues(objectValue, 'manager');
@@ -29,7 +29,7 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
     final oneOfAspects = _getValues(objectValue, 'oneOf');
     final excludedAspects = _getValues(objectValue, 'exclude');
     final baseClassConstructor =
-        (annotation.read('base').typeValue.element as ClassElement)
+        (annotation.read('base').typeValue.element2 as ClassElement)
             .unnamedConstructor!;
     final constructorParameter = baseClassConstructor.parameters
         .where((parameterElement) =>
