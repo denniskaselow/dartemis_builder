@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 1,15 * *'
+  push:
+    branches: [ develop, master ]
+  pull_request:
+    branches: [ develop, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: dart-lang/setup-dart@v1.3
+        with:
+          sdk: dev
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Analyze
+        run: dart analyze --fatal-infos
+
+      - name: Run Tests
+        run: dart test
+
+      - name: Activate test coverage
+        run: dart pub global activate -sgit https://github.com/denniskaselow/dart-coveralls.git
+
+      - name: Run test coverage
+        run: dart pub global run dart_coveralls report --token ${{ secrets.COVERALLS_TOKEN }} --exclude-test-files test/all_tests.dart --throw-on-error
