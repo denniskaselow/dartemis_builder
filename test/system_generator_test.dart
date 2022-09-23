@@ -27,7 +27,10 @@ void main() {
 
     test('should handle generics', () async {
       final result = await generate(
-          systemExtendingEntitySystemWithGenerics, generator, buildStep);
+        systemExtendingEntitySystemWithGenerics,
+        generator,
+        buildStep,
+      );
 
       expect(result, equals(systemExtendingEntitySystemWithGenericsResult));
     });
@@ -74,21 +77,54 @@ void main() {
 
     test('should create constructor with parameters of superclass', () async {
       final result = await generate(
-          systemExtendingOtherSystemWithCustomConstructor,
-          generator,
-          buildStep);
+        systemExtendingOtherSystemWithCustomConstructor,
+        generator,
+        buildStep,
+      );
 
-      expect(result,
-          equals(systemExtendingOtherSystemWithCustomConstructorResult));
+      expect(
+        result,
+        equals(systemExtendingOtherSystemWithCustomConstructorResult),
+      );
     });
 
     test(
         '''should create constructor with aspect parameter if user wants to pass aspects''',
         () async {
       final result = await generate(
-          systemWithConstructorAcceptingAspects, generator, buildStep);
+        systemWithConstructorAcceptingAspects,
+        generator,
+        buildStep,
+      );
 
       expect(result, equals(systemWithConstructorAcceptingAspectsResult));
+    });
+
+    test(
+        '''should create constructor with aspect parameter if user wants to pass aspects using super parameter''',
+        () async {
+      final result = await generate(
+        systemWithConstructorAcceptingSuperParameterAspects,
+        generator,
+        buildStep,
+      );
+
+      expect(result, equals(systemWithConstructorAcceptingAspectsResult));
+    });
+
+    test(
+        '''should create constructor with aspect parameter if user wants to pass aspects using super parameter''',
+        () async {
+      final result = await generate(
+        systemAcceptingSuperParameterAspectsAndGenerateAspect,
+        generator,
+        buildStep,
+      );
+
+      expect(
+        result,
+        equals(systemAcceptingSuperParameterAspectsAndGenerateAspectResult),
+      );
     });
 
     test('should do everything together', () async {
@@ -100,9 +136,14 @@ void main() {
 }
 
 Future<String> generate(
-    String source, SystemGenerator generator, BuildStep buildStep) async {
+  String source,
+  SystemGenerator generator,
+  BuildStep buildStep,
+) async {
   final libraryElement = await resolveSource<LibraryElement>(
-      source, (resolver) async => (await resolver.findLibraryByName(''))!);
+    source,
+    (resolver) async => (await resolver.findLibraryByName(''))!,
+  );
 
   return await generator.generate(LibraryReader(libraryElement), buildStep);
 }
@@ -237,7 +278,7 @@ class SomeSystem extends _$SomeSystem {}''';
 
 const systemExtendingOtherSystemWithCustomConstructorResult = r'''
 abstract class _$SomeSystem extends SomeOtherSystem {
-  _$SomeSystem(String someField) : super(someField);
+  _$SomeSystem(super.someField);
 }''';
 
 const systemWithConstructorAcceptingAspects = r'''
@@ -248,9 +289,38 @@ class SomeSystem extends _$SomeSystem {
   SomeSystem(Aspect aspect) : super(aspect);
 }''';
 
+const systemWithConstructorAcceptingSuperParameterAspects = r'''
+import 'package:dartemis/dartemis.dart';
+
+@Generate(EntityProcessingSystem)
+class SomeSystem extends _$SomeSystem {
+  SomeSystem(super.aspect);
+}''';
+
 const systemWithConstructorAcceptingAspectsResult = r'''
 abstract class _$SomeSystem extends EntityProcessingSystem {
-  _$SomeSystem(Aspect aspect) : super(aspect);
+  _$SomeSystem(super.aspect);
+}''';
+
+const systemAcceptingSuperParameterAspectsAndGenerateAspect = r'''
+import 'package:dartemis/dartemis.dart';
+
+class SomeComponent extends Component {}
+
+@Generate(EntityProcessingSystem, allOf: [SomeComponent])
+class SomeSystem extends _$SomeSystem {
+  SomeSystem(super.aspect);
+}''';
+
+const systemAcceptingSuperParameterAspectsAndGenerateAspectResult = r'''
+abstract class _$SomeSystem extends EntityProcessingSystem {
+  late final Mapper<SomeComponent> someComponentMapper;
+  _$SomeSystem(Aspect aspect) : super(aspect..allOf([SomeComponent]));
+  @override
+  void initialize() {
+    super.initialize();
+    someComponentMapper = Mapper<SomeComponent>(world);
+  }
 }''';
 
 const systemWithEverything = r'''
@@ -276,7 +346,11 @@ class IntermediateSystem extends _$IntermediateSystem {
   oneOf: const [YetAnotherComponent],
   mapper: const [OneMoreComponent],
   manager: const [SomeManager])
-class FinalSystem extends _$FinalSystem {}''';
+class FinalSystem extends _$FinalSystem {}
+
+@Generate(IntermediateSystem)
+class OtherFinalSystem extends _$OtherFinalSystem {}
+''';
 
 const systemWithEverythingResult = r'''
 abstract class _$SomeManager extends Manager {
@@ -312,6 +386,10 @@ abstract class _$FinalSystem extends IntermediateSystem {
     yetAnotherComponentMapper = OptionalMapper<YetAnotherComponent>(world);
     someManager = world.getManager<SomeManager>();
   }
+}
+
+abstract class _$OtherFinalSystem extends IntermediateSystem {
+  _$OtherFinalSystem(super.value, super.aspect);
 }''';
 
 const systemExtendingEntitySystemWithGenerics = r'''

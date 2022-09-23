@@ -1,10 +1,15 @@
 # Changelog
 
+## 0.2.2
+### Enhancements
+- supports super parameters (requires SDK >= 2.17)
+
 ## 0.2.1
 ### Minor Changes
 - updated analyzer dependency from ^2.7.0 to ^4.0.0 
 
 ## 0.2.0
+### Enhancements
 - supports NNBD
 - creates OptionalMapper for oneOf-Mappers 
 
