@@ -25,9 +25,8 @@ part 'filename.g.part';
 )
 class SimpleMovementSystem extends _$SimpleMovementSystem {
   @override
-  void processEntity(int entity) {
-    final velocity = velocityMapper[entity];
-    positionMapper[entity]
+  void processEntity(int entity, Position position, Velocity velocity) {    
+    position
       ..x += velocity.x * world.delta
       ..y += velocity.y * world.delta;
   }
