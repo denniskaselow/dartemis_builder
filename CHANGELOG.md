@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0
+### Enhancements
+- **BREAKING CHANGE:** generated code now creates a `processEntity` method with the
+  components as parameters; it's no longer required to use the mappers
+
 ## 0.2.2+1
 ### Minor Changes
 - updated analyzer dependency from ^4.0.0 to ^5.0.0

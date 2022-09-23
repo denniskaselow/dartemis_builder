@@ -23,7 +23,9 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
     final combineAspects = classConstructor.parameters.any(_isAspectParameter);
     final objectValue = annotation.objectValue;
     final baseClassType = objectValue.getField('base')!.toTypeValue()!;
-    final baseClassName = baseClassType.element2!.name;
+    final realBaseClassName = baseClassType.element2!.name;
+    final isBaseClassEntityProcessingSystem =
+        realBaseClassName == 'EntityProcessingSystem';
     final baseClassTypeParameters =
         (baseClassType.element2! as ClassElement).typeParameters;
     final mapper = _getValues(objectValue, 'mapper');
@@ -32,6 +34,10 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
     final allOfAspects = _getValues(objectValue, 'allOf');
     final oneOfAspects = _getValues(objectValue, 'oneOf');
     final excludedAspects = _getValues(objectValue, 'exclude');
+    final shouldCreateCustomProcessEntity = isBaseClassEntityProcessingSystem &&
+        (allOfAspects.isNotEmpty || oneOfAspects.isNotEmpty);
+    final baseClassName =
+        shouldCreateCustomProcessEntity ? 'EntitySystem' : realBaseClassName;
     final baseClassConstructor =
         (annotation.read('base').typeValue.element2! as ClassElement)
             .unnamedConstructor!;
@@ -161,6 +167,31 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
         result.writeln(managerInitializations);
       }
       result.writeln('  }');
+    }
+
+    if (shouldCreateCustomProcessEntity) {
+      result
+        ..writeln('  @override')
+        ..writeln('  void processEntities(Iterable<int> entities) {');
+      for (final aspect in allOfAspects.followedBy(oneOfAspects)) {
+        final mapperName = _toMapperName(aspect);
+        result.writeln('    final $mapperName = this.$mapperName;');
+      }
+      final arguments = allOfAspects
+          .followedBy(oneOfAspects)
+          .map((e) => '${_toMapperName(e)}[entity]')
+          .join(', ');
+      result
+        ..writeln('    for (final entity in entities) {')
+        ..writeln('      processEntity(entity, $arguments);')
+        ..writeln('    }')
+        ..writeln('  }');
+
+      final parameters = [
+        ...allOfAspects.map((e) => '$e ${_toVariableName(e)}'),
+        ...oneOfAspects.map((e) => '$e? ${_toVariableName(e)}')
+      ].join(', ');
+      result.writeln('  void processEntity(int entity, $parameters);');
     }
 
     result.writeln('}');

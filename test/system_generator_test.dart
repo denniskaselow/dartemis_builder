@@ -223,7 +223,7 @@ class SomeComponent extends Component {}
 class SomeSystem extends _$SomeSystem { {}''';
 
 const systemWithAllOfAspectResult = r'''
-abstract class _$SomeSystem extends EntityProcessingSystem {
+abstract class _$SomeSystem extends EntitySystem {
   late final Mapper<SomeComponent> someComponentMapper;
   _$SomeSystem() : super(Aspect.empty()..allOf([SomeComponent]));
   @override
@@ -231,6 +231,14 @@ abstract class _$SomeSystem extends EntityProcessingSystem {
     super.initialize();
     someComponentMapper = Mapper<SomeComponent>(world);
   }
+  @override
+  void processEntities(Iterable<int> entities) {
+    final someComponentMapper = this.someComponentMapper;
+    for (final entity in entities) {
+      processEntity(entity, someComponentMapper[entity]);
+    }
+  }
+  void processEntity(int entity, SomeComponent someComponent);
 }''';
 
 const systemWithOneOfAspect = r'''
@@ -242,7 +250,7 @@ class SomeComponent extends Component {}
 class SomeSystem extends _$SomeSystem { {}''';
 
 const systemWithOneOfAspectResult = r'''
-abstract class _$SomeSystem extends EntityProcessingSystem {
+abstract class _$SomeSystem extends EntitySystem {
   late final OptionalMapper<SomeComponent> someComponentMapper;
   _$SomeSystem() : super(Aspect.empty()..oneOf([SomeComponent]));
   @override
@@ -250,6 +258,14 @@ abstract class _$SomeSystem extends EntityProcessingSystem {
     super.initialize();
     someComponentMapper = OptionalMapper<SomeComponent>(world);
   }
+  @override
+  void processEntities(Iterable<int> entities) {
+    final someComponentMapper = this.someComponentMapper;
+    for (final entity in entities) {
+      processEntity(entity, someComponentMapper[entity]);
+    }
+  }
+  void processEntity(int entity, SomeComponent? someComponent);
 }''';
 
 const systemWithExcludeAspect = r'''
@@ -313,7 +329,7 @@ class SomeSystem extends _$SomeSystem {
 }''';
 
 const systemAcceptingSuperParameterAspectsAndGenerateAspectResult = r'''
-abstract class _$SomeSystem extends EntityProcessingSystem {
+abstract class _$SomeSystem extends EntitySystem {
   late final Mapper<SomeComponent> someComponentMapper;
   _$SomeSystem(Aspect aspect) : super(aspect..allOf([SomeComponent]));
   @override
@@ -321,6 +337,14 @@ abstract class _$SomeSystem extends EntityProcessingSystem {
     super.initialize();
     someComponentMapper = Mapper<SomeComponent>(world);
   }
+  @override
+  void processEntities(Iterable<int> entities) {
+    final someComponentMapper = this.someComponentMapper;
+    for (final entity in entities) {
+      processEntity(entity, someComponentMapper[entity]);
+    }
+  }
+  void processEntity(int entity, SomeComponent someComponent);
 }''';
 
 const systemWithEverything = r'''
@@ -362,7 +386,7 @@ abstract class _$SomeManager extends Manager {
   }
 }
 
-abstract class _$IntermediateSystem extends EntityProcessingSystem {
+abstract class _$IntermediateSystem extends EntitySystem {
   late final Mapper<SomeComponent> someComponentMapper;
   _$IntermediateSystem(Aspect aspect) : super(aspect..allOf([SomeComponent])..exclude([NotThisComponent]));
   @override
@@ -370,6 +394,14 @@ abstract class _$IntermediateSystem extends EntityProcessingSystem {
     super.initialize();
     someComponentMapper = Mapper<SomeComponent>(world);
   }
+  @override
+  void processEntities(Iterable<int> entities) {
+    final someComponentMapper = this.someComponentMapper;
+    for (final entity in entities) {
+      processEntity(entity, someComponentMapper[entity]);
+    }
+  }
+  void processEntity(int entity, SomeComponent someComponent);
 }
 
 abstract class _$FinalSystem extends IntermediateSystem {
