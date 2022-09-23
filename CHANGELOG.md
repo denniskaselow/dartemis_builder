@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2+1
+### Minor Changes
+- updated analyzer dependency from ^4.0.0 to ^5.0.0
+
 ## 0.2.2
 ### Enhancements
 - supports super parameters (requires SDK >= 2.17)
