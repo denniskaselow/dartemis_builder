@@ -1,15 +1,28 @@
 # dartemis_builder
+[![Build Status](https://github.com/denniskaselow/dartemis_builder/actions/workflows/dart.yml/badge.svg)](https://github.com/denniskaselow/dartemis_builder/actions/workflows/dart.yml)
+[![Coverage Status](https://coveralls.io/repos/github/denniskaselow/dartemis_builder/badge.svg?branch=master)](https://coveralls.io/github/denniskaselow/dartemis_builder?branch=master)
+[![Pub](https://img.shields.io/pub/v/dartemis_builder.svg)](https://pub.dartlang.org/packages/dartemis_builder)
 
 A builder for dartemis to create the code necessary to initialize `Manager`s, `Mapper`s and `EntitySystem`s.
 
 ## Usage
+
+Add `dartemis_builder` as a dev_dependency:
+
+`dart pub add --dev dartemis_builder`
 
 Add the `part` statement to your library and the `@Generate` annotation on a `Manager` or `EntitySystem` and run `build_runner`.
 
 ```dart
 part 'filename.g.part';
 
-@Generate(EntityProcessingSystem, allOf: [Velocity, Position])
+@Generate(
+  EntityProcessingSystem,
+  allOf: [
+    Position,
+    Velocity,
+  ],
+)
 class SimpleMovementSystem extends _$SimpleMovementSystem {
   @override
   void processEntity(int entity) {
