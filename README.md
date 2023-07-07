@@ -14,7 +14,7 @@ Add `dartemis_builder` as a dev_dependency:
 Add the `part` statement to your library and the `@Generate` annotation on a `Manager` or `EntitySystem` and run `build_runner`.
 
 ```dart
-part 'filename.g.part';
+part 'filename.g.dart';
 
 @Generate(
   EntityProcessingSystem,
