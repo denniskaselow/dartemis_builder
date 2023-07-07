@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1
+### Minor Changes
+- fixed error in code example in README.md
+- updated analyzer dependency to ^5.2.0
+
 ## 0.3.0
 ### Enhancements
 - **BREAKING CHANGE:** generated code now creates a `processEntity` method with the

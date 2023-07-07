@@ -23,11 +23,11 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
     final combineAspects = classConstructor.parameters.any(_isAspectParameter);
     final objectValue = annotation.objectValue;
     final baseClassType = objectValue.getField('base')!.toTypeValue()!;
-    final realBaseClassName = baseClassType.element2!.name;
+    final realBaseClassName = baseClassType.element!.name;
     final isBaseClassEntityProcessingSystem =
         realBaseClassName == 'EntityProcessingSystem';
     final baseClassTypeParameters =
-        (baseClassType.element2! as ClassElement).typeParameters;
+        (baseClassType.element! as ClassElement).typeParameters;
     final mapper = _getValues(objectValue, 'mapper');
     final systems = _getValues(objectValue, 'systems');
     final managers = _getValues(objectValue, 'manager');
@@ -39,7 +39,7 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
     final baseClassName =
         shouldCreateCustomProcessEntity ? 'EntitySystem' : realBaseClassName;
     final baseClassConstructor =
-        (annotation.read('base').typeValue.element2! as ClassElement)
+        (annotation.read('base').typeValue.element! as ClassElement)
             .unnamedConstructor!;
     final hasGeneratedAspects = allOfAspects.isNotEmpty ||
         oneOfAspects.isNotEmpty ||
@@ -189,7 +189,7 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
 
       final parameters = [
         ...allOfAspects.map((e) => '$e ${_toVariableName(e)}'),
-        ...oneOfAspects.map((e) => '$e? ${_toVariableName(e)}')
+        ...oneOfAspects.map((e) => '$e? ${_toVariableName(e)}'),
       ].join(', ');
       result.writeln('  void processEntity(int entity, $parameters);');
     }
