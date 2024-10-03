@@ -1,3 +1,5 @@
+// ignore_for_file: lines_longer_than_80_chars
+
 import 'dart:async';
 
 import 'package:analyzer/dart/element/element.dart';
@@ -89,7 +91,58 @@ void main() {
     });
 
     test(
-        '''should create constructor with aspect parameter if user wants to pass aspects''',
+        'should create constructor with optional named parameters of superclass',
+        () async {
+      final result = await generate(
+        systemExtendingOtherSystemWithConstructorWithOptionalNamedParameter,
+        generator,
+        buildStep,
+      );
+
+      expect(
+        result,
+        equals(
+          systemExtendingOtherSystemWithConstructorWithOptionalNamedParameterResult,
+        ),
+      );
+    });
+
+    test(
+        'should create constructor with required named parameters of superclass',
+        () async {
+      final result = await generate(
+        systemExtendingOtherSystemWithConstructorWithRequiredNamedParameter,
+        generator,
+        buildStep,
+      );
+
+      expect(
+        result,
+        equals(
+          systemExtendingOtherSystemWithConstructorWithRequiredNamedParameterResult,
+        ),
+      );
+    });
+
+    test(
+        'should create constructor with optional positional parameters of superclass',
+        () async {
+      final result = await generate(
+        systemExtendingOtherSystemWithConstructorWithOptionalPositionalParameter,
+        generator,
+        buildStep,
+      );
+
+      expect(
+        result,
+        equals(
+          systemExtendingOtherSystemWithConstructorWithOptionalPositionalParameterResult,
+        ),
+      );
+    });
+
+    test(
+        'should create constructor with aspect parameter if user wants to pass aspects',
         () async {
       final result = await generate(
         systemWithConstructorAcceptingAspects,
@@ -101,7 +154,7 @@ void main() {
     });
 
     test(
-        '''should create constructor with aspect parameter if user wants to pass aspects using super parameter''',
+        'should create constructor with aspect parameter if user wants to pass aspects using super parameter',
         () async {
       final result = await generate(
         systemWithConstructorAcceptingSuperParameterAspects,
@@ -113,7 +166,7 @@ void main() {
     });
 
     test(
-        '''should create constructor with aspect parameter if user wants to pass aspects using super parameter''',
+        'should create constructor with aspect parameter if user wants to pass aspects using super parameter',
         () async {
       final result = await generate(
         systemAcceptingSuperParameterAspectsAndGenerateAspect,
@@ -226,7 +279,7 @@ class SomeSystem extends _$SomeSystem {}''';
 const systemWithAllOfAspectResult = r'''
 abstract class _$SomeSystem extends EntitySystem {
   late final Mapper<SomeComponent> someComponentMapper;
-  _$SomeSystem() : super(Aspect.empty()..allOf([SomeComponent]));
+  _$SomeSystem({super.group, super.passive}) : super(Aspect(allOf: [SomeComponent],));
   @override
   void initialize(World world) {
     super.initialize(world);
@@ -253,7 +306,7 @@ class SomeSystem extends _$SomeSystem {}''';
 const systemWithOneOfAspectResult = r'''
 abstract class _$SomeSystem extends EntitySystem {
   late final OptionalMapper<SomeComponent> someComponentMapper;
-  _$SomeSystem() : super(Aspect.empty()..oneOf([SomeComponent]));
+  _$SomeSystem({super.group, super.passive}) : super(Aspect(oneOf: [SomeComponent],));
   @override
   void initialize(World world) {
     super.initialize(world);
@@ -279,7 +332,7 @@ class SomeSystem extends _$SomeSystem {}''';
 
 const systemWithExcludeAspectResult = r'''
 abstract class _$SomeSystem extends EntityProcessingSystem {
-  _$SomeSystem() : super(Aspect.empty()..exclude([SomeComponent]));
+  _$SomeSystem({super.group, super.passive}) : super(Aspect(exclude: [SomeComponent],));
 }''';
 
 const systemExtendingOtherSystemWithCustomConstructor = r'''
@@ -296,6 +349,61 @@ class SomeSystem extends _$SomeSystem {}''';
 const systemExtendingOtherSystemWithCustomConstructorResult = r'''
 abstract class _$SomeSystem extends SomeOtherSystem {
   _$SomeSystem(super.someField);
+}''';
+
+const systemExtendingOtherSystemWithConstructorWithOptionalNamedParameter = r'''
+import 'package:dartemis/dartemis.dart';
+
+class SomeOtherSystem extends VoidEntitySystem {
+  String someField;
+  String? someOptionalField;
+  SomeOtherSystem(this.someField, {this.someOptionalField});
+}
+
+@Generate(SomeOtherSystem)
+class SomeSystem extends _$SomeSystem {}''';
+
+const systemExtendingOtherSystemWithConstructorWithOptionalNamedParameterResult =
+    r'''
+abstract class _$SomeSystem extends SomeOtherSystem {
+  _$SomeSystem(super.someField, {super.someOptionalField});
+}''';
+
+const systemExtendingOtherSystemWithConstructorWithRequiredNamedParameter = r'''
+import 'package:dartemis/dartemis.dart';
+
+class SomeOtherSystem extends VoidEntitySystem {
+  String someField;
+  String someOptionalField;
+  SomeOtherSystem(this.someField, {required this.someRequiredField});
+}
+
+@Generate(SomeOtherSystem)
+class SomeSystem extends _$SomeSystem {}''';
+
+const systemExtendingOtherSystemWithConstructorWithRequiredNamedParameterResult =
+    r'''
+abstract class _$SomeSystem extends SomeOtherSystem {
+  _$SomeSystem(super.someField, {required super.someRequiredField});
+}''';
+
+const systemExtendingOtherSystemWithConstructorWithOptionalPositionalParameter =
+    r'''
+import 'package:dartemis/dartemis.dart';
+
+class SomeOtherSystem extends VoidEntitySystem {
+  String someField;
+  String? someOptionalField;
+  SomeOtherSystem(this.someField, [this.someOptionalField]);
+}
+
+@Generate(SomeOtherSystem)
+class SomeSystem extends _$SomeSystem {}''';
+
+const systemExtendingOtherSystemWithConstructorWithOptionalPositionalParameterResult =
+    r'''
+abstract class _$SomeSystem extends SomeOtherSystem {
+  _$SomeSystem(super.someField, [super.someOptionalField]);
 }''';
 
 const systemWithConstructorAcceptingAspects = r'''
@@ -316,7 +424,7 @@ class SomeSystem extends _$SomeSystem {
 
 const systemWithConstructorAcceptingAspectsResult = r'''
 abstract class _$SomeSystem extends EntityProcessingSystem {
-  _$SomeSystem(super.aspect);
+  _$SomeSystem(super.aspect, {super.group, super.passive});
 }''';
 
 const systemAcceptingSuperParameterAspectsAndGenerateAspect = r'''
@@ -332,7 +440,7 @@ class SomeSystem extends _$SomeSystem {
 const systemAcceptingSuperParameterAspectsAndGenerateAspectResult = r'''
 abstract class _$SomeSystem extends EntitySystem {
   late final Mapper<SomeComponent> someComponentMapper;
-  _$SomeSystem(Aspect aspect) : super(aspect..allOf([SomeComponent]));
+  _$SomeSystem(Aspect aspect, {super.group, super.passive}) : super(aspect..allOf([SomeComponent]));
   @override
   void initialize(World world) {
     super.initialize(world);
@@ -389,7 +497,7 @@ abstract class _$SomeManager extends Manager {
 
 abstract class _$IntermediateSystem extends EntitySystem {
   late final Mapper<SomeComponent> someComponentMapper;
-  _$IntermediateSystem(Aspect aspect) : super(aspect..allOf([SomeComponent])..exclude([NotThisComponent]));
+  _$IntermediateSystem(Aspect aspect, {super.group, super.passive}) : super(aspect..allOf([SomeComponent])..exclude([NotThisComponent]));
   @override
   void initialize(World world) {
     super.initialize(world);
@@ -410,7 +518,7 @@ abstract class _$FinalSystem extends IntermediateSystem {
   late final Mapper<OneMoreComponent> oneMoreComponentMapper;
   late final OptionalMapper<YetAnotherComponent> yetAnotherComponentMapper;
   late final SomeManager someManager;
-  _$FinalSystem(String value) : super(value, Aspect.empty()..allOf([SomeOtherComponent])..oneOf([YetAnotherComponent]));
+  _$FinalSystem(String value) : super(value, Aspect(allOf: [SomeOtherComponent],oneOf: [YetAnotherComponent],));
   @override
   void initialize(World world) {
     super.initialize(world);
