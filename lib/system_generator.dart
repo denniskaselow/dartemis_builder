@@ -45,20 +45,22 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
         oneOfAspects.isNotEmpty ||
         excludedAspects.isNotEmpty;
     final useSuperParameters = !hasGeneratedAspects;
-    final constructorParameter = baseClassConstructor.parameters
-        .where((parameterElement) => parameterElement.isPositional)
-        .where(
-          (parameterElement) =>
-              !_isAspectParameter(parameterElement) ||
-              combineAspects ||
-              useSuperParameters,
-        )
-        .map(
-          (parameterElement) => useSuperParameters
-              ? 'super.${parameterElement.name}'
-              : '''${parameterElement.type.getDisplayString(withNullability: false)} ${parameterElement.name}''',
-        )
-        .join(', ');
+    final constructorParameter = [
+      baseClassConstructor.parameters
+          .where((parameterElement) => parameterElement.isRequiredPositional)
+          .where(
+            (parameterElement) =>
+                !_isAspectParameter(parameterElement) ||
+                combineAspects ||
+                useSuperParameters,
+          )
+          .map(
+            (parameterElement) => useSuperParameters
+                ? 'super.${parameterElement.name}'
+                : '''${parameterElement.type.getDisplayString(withNullability: false)} ${parameterElement.name}''',
+          )
+          .join(', '),
+    ];
     final superCallParameter = useSuperParameters
         ? ''
         : baseClassConstructor.parameters
@@ -74,6 +76,27 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
                   : parameterElement.name,
             )
             .join(', ');
+    final needsConstructor =
+        constructorParameter[0].isNotEmpty || superCallParameter.isNotEmpty;
+    if (needsConstructor) {
+      final optionalPositionalParameters = baseClassConstructor.parameters
+          .where((parameter) => parameter.isOptionalPositional)
+          .map((parameter) => 'super.${parameter.name}')
+          .join(', ');
+      if (optionalPositionalParameters.isNotEmpty) {
+        constructorParameter.add('[$optionalPositionalParameters]');
+      }
+      final optionalNamedParameters = baseClassConstructor.parameters
+          .where((parameter) => parameter.isNamed)
+          .map(
+            (parameter) =>
+                '''${parameter.isRequired ? 'required ' : ''}super.${parameter.name}''',
+          )
+          .join(', ');
+      if (optionalNamedParameters.isNotEmpty) {
+        constructorParameter.add('{$optionalNamedParameters}');
+      }
+    }
     final components = {...allOfAspects, ...mapper};
     final optionalComponents = {...oneOfAspects};
     final mapperDeclarations = components
@@ -140,11 +163,13 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
         result.writeln(managerDeclarations);
       }
     }
-    if (constructorParameter.isNotEmpty || superCallParameter.isNotEmpty) {
+    if (needsConstructor) {
       if (!hasFields) {
         result.writeln();
       }
-      result.write('  _\$$className($constructorParameter)');
+      final constructorParameterString =
+          constructorParameter.where((param) => param.isNotEmpty).join(', ');
+      result.write('  _\$$className($constructorParameterString)');
       if (!useSuperParameters) {
         result.write(' : super($superCallParameter)');
       }
@@ -227,15 +252,30 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
     Iterable<String> excludedAspects,
     bool combineAspects,
   ) {
-    final result = StringBuffer(combineAspects ? 'aspect' : 'Aspect.empty()');
-    if (allOfAspects.isNotEmpty) {
-      result.write('..allOf([${allOfAspects.join(', ')}])');
-    }
-    if (oneOfAspects.isNotEmpty) {
-      result.write('..oneOf([${oneOfAspects.join(', ')}])');
-    }
-    if (excludedAspects.isNotEmpty) {
-      result.write('..exclude([${excludedAspects.join(', ')}])');
+    final result = StringBuffer();
+    if (combineAspects) {
+      result.write('aspect');
+      if (allOfAspects.isNotEmpty) {
+        result.write('..allOf([${allOfAspects.join(', ')}])');
+      }
+      if (oneOfAspects.isNotEmpty) {
+        result.write('..oneOf([${oneOfAspects.join(', ')}])');
+      }
+      if (excludedAspects.isNotEmpty) {
+        result.write('..exclude([${excludedAspects.join(', ')}])');
+      }
+    } else {
+      result.write('Aspect(');
+      if (allOfAspects.isNotEmpty) {
+        result.write('allOf: [${allOfAspects.join(', ')}],');
+      }
+      if (oneOfAspects.isNotEmpty) {
+        result.write('oneOf: [${oneOfAspects.join(', ')}],');
+      }
+      if (excludedAspects.isNotEmpty) {
+        result.write('exclude: [${excludedAspects.join(', ')}],');
+      }
+      result.write(')');
     }
     return result.toString();
   }
