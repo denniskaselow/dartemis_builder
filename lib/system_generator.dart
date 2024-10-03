@@ -46,6 +46,7 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
         excludedAspects.isNotEmpty;
     final useSuperParameters = !hasGeneratedAspects;
     final constructorParameter = baseClassConstructor.parameters
+        .where((parameterElement) => parameterElement.isPositional)
         .where(
           (parameterElement) =>
               !_isAspectParameter(parameterElement) ||
@@ -61,6 +62,7 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
     final superCallParameter = useSuperParameters
         ? ''
         : baseClassConstructor.parameters
+            .where((parameterElement) => parameterElement.isPositional)
             .map(
               (parameterElement) => _isAspectParameter(parameterElement)
                   ? _createAspectParameter(
@@ -152,8 +154,8 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
     if (hasFields) {
       result
         ..writeln('  @override')
-        ..writeln('  void initialize() {')
-        ..writeln('    super.initialize();');
+        ..writeln('  void initialize(World world) {')
+        ..writeln('    super.initialize(world);');
       if (components.isNotEmpty) {
         result.writeln(mapperInitializations);
       }
@@ -172,7 +174,7 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
     if (shouldCreateCustomProcessEntity) {
       result
         ..writeln('  @override')
-        ..writeln('  void processEntities(Iterable<int> entities) {');
+        ..writeln('  void processEntities(Iterable<Entity> entities) {');
       for (final aspect in allOfAspects.followedBy(oneOfAspects)) {
         final mapperName = _toMapperName(aspect);
         result.writeln('    final $mapperName = this.$mapperName;');
@@ -191,7 +193,7 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
         ...allOfAspects.map((e) => '$e ${_toVariableName(e)}'),
         ...oneOfAspects.map((e) => '$e? ${_toVariableName(e)}'),
       ].join(', ');
-      result.writeln('  void processEntity(int entity, $parameters);');
+      result.writeln('  void processEntity(Entity entity, $parameters);');
     }
 
     result.writeln('}');

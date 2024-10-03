@@ -1,16 +1,17 @@
 name: dartemis_builder
 description: A builder for use with dartemis to generate code that initializes EntitySystems and Managers.
-version: 0.3.1
+version: 0.4.0
 homepage: https://github.com/denniskaselow/dartemis_builder
 
 environment:
   sdk: '>=2.17.0 <4.0.0'
 
 dependencies:
-  analyzer: ^5.2.0
+  analyzer: ^6.9.0
   build: ^2.0.0
   build_config: ^1.0.0
-  dartemis: ^0.9.0
+  dartemis:
+    path: ../dartemis
   source_gen: ^1.0.0
 
 dev_dependencies:
