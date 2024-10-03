@@ -1,5 +1,10 @@
 # Changelog
 
+### 0.4.0
+### Enhancements
+- supports dartemis 0.4.0
+- can handle named and optional parameters
+
 ## 0.3.1
 ### Minor Changes
 - fixed error in code example in README.md
