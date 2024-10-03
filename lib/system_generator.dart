@@ -57,7 +57,7 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
           .map(
             (parameterElement) => useSuperParameters
                 ? 'super.${parameterElement.name}'
-                : '''${parameterElement.type.getDisplayString(withNullability: false)} ${parameterElement.name}''',
+                : '''${parameterElement.type.getDisplayString()} ${parameterElement.name}''',
           )
           .join(', '),
     ];
@@ -227,8 +227,7 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
   }
 
   bool _isAspectParameter(ParameterElement parameterElement) =>
-      parameterElement.type.getDisplayString(withNullability: false) ==
-          'Aspect' ||
+      parameterElement.type.getDisplayString() == 'Aspect' ||
       parameterElement.isSuperFormal && parameterElement.name == 'aspect';
 
   String _baseClassBoundedTypeParameters(
@@ -237,7 +236,7 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
       baseClassTypeParameters
           .map(
             (param) =>
-                '''${param.name} extends ${param.bound!.getDisplayString(withNullability: false)}''',
+                '''${param.name} extends ${param.bound!.getDisplayString()}''',
           )
           .join(', ');
 
@@ -295,7 +294,7 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
       objectValue.getField(fieldName)!.toListValue()!.map(_nameOfDartObject);
 
   String _nameOfDartObject(DartObject dartObject) =>
-      dartObject.toTypeValue()!.getDisplayString(withNullability: false);
+      dartObject.toTypeValue()!.getDisplayString();
 
   String _toMapperName(String typeName) => '${_toVariableName(typeName)}Mapper';
 
