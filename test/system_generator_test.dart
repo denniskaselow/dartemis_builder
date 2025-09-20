@@ -2,208 +2,163 @@
 
 import 'dart:async';
 
-import 'package:analyzer/dart/element/element.dart';
 import 'package:build/build.dart';
 import 'package:build_test/build_test.dart';
-import 'package:dartemis_builder/system_generator.dart';
-import 'package:mockito/mockito.dart';
-import 'package:source_gen/source_gen.dart';
+import 'package:dart_style/dart_style.dart';
+import 'package:dartemis_builder/builder.dart';
 import 'package:test/test.dart';
 
-void main() {
+final formatter = DartFormatter(
+  languageVersion: DartFormatter.latestLanguageVersion,
+);
+final reader = TestReaderWriter(rootPackage: 'game');
+
+void main() async {
+  await reader.testing.loadIsolateSources();
   group('system generator', () {
-    late SystemGenerator generator;
-    late BuildStep buildStep;
+    late Builder builder;
+    late Function(String input, String output) testInOut;
 
     setUp(() async {
-      generator = const SystemGenerator();
-      buildStep = BuildStepMock();
+      builder = systemBuilder(BuilderOptions.empty);
+
+      testInOut = (input, output) => generate(input, output, builder, reader);
     });
 
     test('should extend base class', () async {
-      final result =
-          await generate(systemExtendingVoidEntitySystem, generator, buildStep);
-
-      expect(result, equals(systemExtendingVoidEntitySystemResult));
+      await testInOut(
+        systemExtendingVoidEntitySystem,
+        systemExtendingVoidEntitySystemResult,
+      );
     });
 
     test('should handle generics', () async {
-      final result = await generate(
+      await testInOut(
         systemExtendingEntitySystemWithGenerics,
-        generator,
-        buildStep,
+        systemExtendingEntitySystemWithGenericsResult,
       );
-
-      expect(result, equals(systemExtendingEntitySystemWithGenericsResult));
     });
 
     test('should create mappers', () async {
-      final result = await generate(systemWithMapper, generator, buildStep);
-
-      expect(result, equals(systemWithMapperResult));
+      await testInOut(systemWithMapper, systemWithMapperResult);
     });
 
     test('should create systems', () async {
-      final result =
-          await generate(systemWithOtherSystem, generator, buildStep);
-
-      expect(result, equals(systemWithOtherSystemResult));
+      await testInOut(systemWithOtherSystem, systemWithOtherSystemResult);
     });
 
     test('should create managers', () async {
-      final result = await generate(systemWithManager, generator, buildStep);
-
-      expect(result, equals(systemWithManagerResult));
+      await testInOut(systemWithManager, systemWithManagerResult);
     });
 
     test('should create constructor and mappers for allOf aspect', () async {
-      final result =
-          await generate(systemWithAllOfAspect, generator, buildStep);
-
-      expect(result, equals(systemWithAllOfAspectResult));
+      await testInOut(systemWithAllOfAspect, systemWithAllOfAspectResult);
     });
 
     test('should create constructor and mappers for oneOf aspect', () async {
-      final result =
-          await generate(systemWithOneOfAspect, generator, buildStep);
-
-      expect(result, equals(systemWithOneOfAspectResult));
+      await testInOut(systemWithOneOfAspect, systemWithOneOfAspectResult);
     });
 
     test('should create constructor and excluded aspects', () async {
-      final result =
-          await generate(systemWithExcludeAspect, generator, buildStep);
-
-      expect(result, equals(systemWithExcludeAspectResult));
+      await testInOut(systemWithExcludeAspect, systemWithExcludeAspectResult);
     });
 
     test('should create constructor with parameters of superclass', () async {
-      final result = await generate(
+      await testInOut(
         systemExtendingOtherSystemWithCustomConstructor,
-        generator,
-        buildStep,
-      );
-
-      expect(
-        result,
-        equals(systemExtendingOtherSystemWithCustomConstructorResult),
+        systemExtendingOtherSystemWithCustomConstructorResult,
       );
     });
 
     test(
-        'should create constructor with optional named parameters of superclass',
-        () async {
-      final result = await generate(
-        systemExtendingOtherSystemWithConstructorWithOptionalNamedParameter,
-        generator,
-        buildStep,
-      );
-
-      expect(
-        result,
-        equals(
+      'should create constructor with optional named parameters of superclass',
+      () async {
+        await testInOut(
+          systemExtendingOtherSystemWithConstructorWithOptionalNamedParameter,
           systemExtendingOtherSystemWithConstructorWithOptionalNamedParameterResult,
-        ),
-      );
-    });
+        );
+      },
+    );
 
     test(
-        'should create constructor with required named parameters of superclass',
-        () async {
-      final result = await generate(
-        systemExtendingOtherSystemWithConstructorWithRequiredNamedParameter,
-        generator,
-        buildStep,
-      );
-
-      expect(
-        result,
-        equals(
+      'should create constructor with required named parameters of superclass',
+      () async {
+        await testInOut(
+          systemExtendingOtherSystemWithConstructorWithRequiredNamedParameter,
           systemExtendingOtherSystemWithConstructorWithRequiredNamedParameterResult,
-        ),
-      );
-    });
+        );
+      },
+    );
 
     test(
-        'should create constructor with optional positional parameters of superclass',
-        () async {
-      final result = await generate(
-        systemExtendingOtherSystemWithConstructorWithOptionalPositionalParameter,
-        generator,
-        buildStep,
-      );
-
-      expect(
-        result,
-        equals(
+      'should create constructor with optional positional parameters of superclass',
+      () async {
+        await testInOut(
+          systemExtendingOtherSystemWithConstructorWithOptionalPositionalParameter,
           systemExtendingOtherSystemWithConstructorWithOptionalPositionalParameterResult,
-        ),
-      );
-    });
+        );
+      },
+    );
 
     test(
-        'should create constructor with aspect parameter if user wants to pass aspects',
-        () async {
-      final result = await generate(
-        systemWithConstructorAcceptingAspects,
-        generator,
-        buildStep,
-      );
-
-      expect(result, equals(systemWithConstructorAcceptingAspectsResult));
-    });
+      'should create constructor with aspect parameter if user wants to pass aspects',
+      () async {
+        await testInOut(
+          systemWithConstructorAcceptingAspects,
+          systemWithConstructorAcceptingAspectsResult,
+        );
+      },
+    );
 
     test(
-        'should create constructor with aspect parameter if user wants to pass aspects using super parameter',
-        () async {
-      final result = await generate(
-        systemWithConstructorAcceptingSuperParameterAspects,
-        generator,
-        buildStep,
-      );
-
-      expect(result, equals(systemWithConstructorAcceptingAspectsResult));
-    });
+      'should create constructor with aspect parameter if user wants to pass aspects using super parameter',
+      () async {
+        await testInOut(
+          systemWithConstructorAcceptingSuperParameterAspects,
+          systemWithConstructorAcceptingAspectsResult,
+        );
+      },
+    );
 
     test(
-        'should create constructor with aspect parameter if user wants to pass aspects using super parameter',
-        () async {
-      final result = await generate(
-        systemAcceptingSuperParameterAspectsAndGenerateAspect,
-        generator,
-        buildStep,
-      );
-
-      expect(
-        result,
-        equals(systemAcceptingSuperParameterAspectsAndGenerateAspectResult),
-      );
-    });
+      'should create constructor with aspect parameter if user wants to pass aspects using super parameter',
+      () async {
+        await testInOut(
+          systemAcceptingSuperParameterAspectsAndGenerateAspect,
+          systemAcceptingSuperParameterAspectsAndGenerateAspectResult,
+        );
+      },
+    );
 
     test('should do everything together', () async {
-      final result = await generate(systemWithEverything, generator, buildStep);
-
-      expect(result, equals(systemWithEverythingResult));
+      await testInOut(systemWithEverything, systemWithEverythingResult);
     });
   });
 }
 
-Future<String> generate(
+Future<void> generate(
   String source,
-  SystemGenerator generator,
-  BuildStep buildStep,
+  String output,
+  Builder builder,
+  TestReaderWriter reader,
 ) async {
-  final libraryElement = await resolveSource<LibraryElement>(
-    source,
-    (resolver) => resolver
-        .libraryFor(AssetId('_resolve_source', 'lib/_resolve_source.dart')),
+  final sharedBuilderHeader =
+      '''
+// ${'*' * 74}
+// SystemGenerator
+// ${'*' * 74}
+
+''';
+
+  final expectedOutput = formatter.format(sharedBuilderHeader + output);
+  await testBuilder(
+    builder,
+    {'game|lib/src.dart': source},
+    outputs: {'game|lib/src.dartemis_builder.g.part': expectedOutput},
+
+    readerWriter: reader,
   );
-
-  return await generator.generate(LibraryReader(libraryElement), buildStep);
 }
-
-// ignore: subtype_of_sealed_class
-class BuildStepMock extends Mock implements BuildStep {}
 
 const systemExtendingVoidEntitySystem = r'''
 import 'package:dartemis/dartemis.dart';

@@ -20,7 +20,8 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
   ) async {
     final className = element.name;
     final classConstructor = element.unnamedConstructor!;
-    final combineAspects = classConstructor.parameters.any(_isAspectParameter);
+    final combineAspects =
+        classConstructor.formalParameters.any(_isAspectParameter);
     final objectValue = annotation.objectValue;
     final baseClassType = objectValue.getField('base')!.toTypeValue()!;
     final realBaseClassName = baseClassType.element!.name;
@@ -46,7 +47,7 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
         excludedAspects.isNotEmpty;
     final useSuperParameters = !hasGeneratedAspects;
     final constructorParameter = [
-      baseClassConstructor.parameters
+      baseClassConstructor.formalParameters
           .where((parameterElement) => parameterElement.isRequiredPositional)
           .where(
             (parameterElement) =>
@@ -63,7 +64,7 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
     ];
     final superCallParameter = useSuperParameters
         ? ''
-        : baseClassConstructor.parameters
+        : baseClassConstructor.formalParameters
             .where((parameterElement) => parameterElement.isPositional)
             .map(
               (parameterElement) => _isAspectParameter(parameterElement)
@@ -79,14 +80,14 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
     final needsConstructor =
         constructorParameter[0].isNotEmpty || superCallParameter.isNotEmpty;
     if (needsConstructor) {
-      final optionalPositionalParameters = baseClassConstructor.parameters
+      final optionalPositionalParameters = baseClassConstructor.formalParameters
           .where((parameter) => parameter.isOptionalPositional)
           .map((parameter) => 'super.${parameter.name}')
           .join(', ');
       if (optionalPositionalParameters.isNotEmpty) {
         constructorParameter.add('[$optionalPositionalParameters]');
       }
-      final optionalNamedParameters = baseClassConstructor.parameters
+      final optionalNamedParameters = baseClassConstructor.formalParameters
           .where((parameter) => parameter.isNamed)
           .map(
             (parameter) =>
@@ -226,7 +227,7 @@ class SystemGenerator extends GeneratorForAnnotation<Generate> {
     return result.toString();
   }
 
-  bool _isAspectParameter(ParameterElement parameterElement) =>
+  bool _isAspectParameter(FormalParameterElement parameterElement) =>
       parameterElement.type.getDisplayString() == 'Aspect' ||
       parameterElement.isSuperFormal && parameterElement.name == 'aspect';
 

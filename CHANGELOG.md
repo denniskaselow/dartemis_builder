@@ -1,8 +1,13 @@
 # Changelog
 
+### 0.4.0+1
+### Dependency upgrades
+- updated analyzer dependency from ^6.8.0 to ^8.2.0
+- updated SDK lower bound from 2.17.0 to 3.9.0
+
 ### 0.4.0
 ### Enhancements
-- supports dartemis 0.4.0
+- supports dartemis 0.10.0
 - can handle named and optional parameters
 
 ## 0.3.1
