@@ -2,27 +2,21 @@
 
 import 'dart:async';
 
-import 'package:build/build.dart';
 import 'package:build_test/build_test.dart';
-import 'package:dart_style/dart_style.dart';
-import 'package:dartemis_builder/builder.dart';
+import 'package:dartemis_builder/system_generator.dart';
+import 'package:source_gen/source_gen.dart';
 import 'package:test/test.dart';
 
-final formatter = DartFormatter(
-  languageVersion: DartFormatter.latestLanguageVersion,
-);
-final reader = TestReaderWriter(rootPackage: 'game');
-
-void main() async {
-  await reader.testing.loadIsolateSources();
+void main() {
   group('system generator', () {
-    late Builder builder;
+    late TestReaderWriter readerWriter;
     late Function(String input, String output) testInOut;
-
     setUp(() async {
-      builder = systemBuilder(BuilderOptions.empty);
+      readerWriter = TestReaderWriter(rootPackage: 'dummy');
+      await readerWriter.testing.loadIsolateSources();
 
-      testInOut = (input, output) => generate(input, output, builder, reader);
+      testInOut = (input, output) =>
+          expectCorrectOutput(readerWriter, input, output);
     });
 
     test('should extend base class', () async {
@@ -40,27 +34,45 @@ void main() async {
     });
 
     test('should create mappers', () async {
-      await testInOut(systemWithMapper, systemWithMapperResult);
+      await testInOut(
+        systemWithMapper,
+        systemWithMapperResult,
+      );
     });
 
     test('should create systems', () async {
-      await testInOut(systemWithOtherSystem, systemWithOtherSystemResult);
+      await testInOut(
+        systemWithOtherSystem,
+        systemWithOtherSystemResult,
+      );
     });
 
     test('should create managers', () async {
-      await testInOut(systemWithManager, systemWithManagerResult);
+      await testInOut(
+        systemWithManager,
+        systemWithManagerResult,
+      );
     });
 
     test('should create constructor and mappers for allOf aspect', () async {
-      await testInOut(systemWithAllOfAspect, systemWithAllOfAspectResult);
+      await testInOut(
+        systemWithAllOfAspect,
+        systemWithAllOfAspectResult,
+      );
     });
 
     test('should create constructor and mappers for oneOf aspect', () async {
-      await testInOut(systemWithOneOfAspect, systemWithOneOfAspectResult);
+      await testInOut(
+        systemWithOneOfAspect,
+        systemWithOneOfAspectResult,
+      );
     });
 
     test('should create constructor and excluded aspects', () async {
-      await testInOut(systemWithExcludeAspect, systemWithExcludeAspectResult);
+      await testInOut(
+        systemWithExcludeAspect,
+        systemWithExcludeAspectResult,
+      );
     });
 
     test('should create constructor with parameters of superclass', () async {
@@ -131,33 +143,32 @@ void main() async {
     );
 
     test('should do everything together', () async {
-      await testInOut(systemWithEverything, systemWithEverythingResult);
+      await testInOut(
+        systemWithEverything,
+        systemWithEverythingResult,
+      );
     });
   });
 }
 
-Future<void> generate(
+Future<void> expectCorrectOutput(
+  TestReaderWriter readerWriter,
   String source,
   String output,
-  Builder builder,
-  TestReaderWriter reader,
 ) async {
-  final sharedBuilderHeader =
-      '''
-// ${'*' * 74}
-// SystemGenerator
-// ${'*' * 74}
-
-''';
-
-  final expectedOutput = formatter.format(sharedBuilderHeader + output);
-  await testBuilder(
-    builder,
-    {'game|lib/src.dart': source},
-    outputs: {'game|lib/src.dartemis_builder.g.part': expectedOutput},
-
-    readerWriter: reader,
+  await readerWriter.testing.loadIsolateSources();
+  final result = await testBuilder(
+    SharedPartBuilder(
+      [const SystemGenerator()],
+      'dartemis_builder',
+      writeDescriptions: false,
+      formatOutput: (code, languageVersion) => code.trim(),
+    ),
+    {'dummy|lib/dummy.dart': source},
+    readerWriter: readerWriter,
+    outputs: {'dummy|lib/dummy.dartemis_builder.g.part': output},
   );
+  expect(result.succeeded, isTrue);
 }
 
 const systemExtendingVoidEntitySystem = r'''
